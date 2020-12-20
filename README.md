@@ -1,15 +1,8 @@
 # ccgt
 
-                _
-   ___ ___ __ _| |_
-  / __/ __/ _` | __|
- | (_| (_| (_| | |_
-  \___\___\__, |\__|
-          |___/
-
 
 console curses guitar tuner
-/*
+
  * ccgt -  concole curses guitar tuner
  *
  * big thanks to joren six, olmo cornelis and marc leman
@@ -25,8 +18,7 @@ console curses guitar tuner
  * under the same license. Copyright and license
  * notices must be preserved. Contributors provide
  * an express grant of patent rights.
- *
- */
+
  
  This tuner originated from some works of Bjørn Roche who inspired me to code audio myself :-)
  
