@@ -1,13 +1,16 @@
 # ccgt
+
+                _
+   ___ ___ __ _| |_
+  / __/ __/ _` | __|
+ | (_| (_| (_| | |_
+  \___\___\__, |\__|
+          |___/
+
+
 console curses guitar tuner
 /*
  * ccgt -  concole curses guitar tuner
- *                _
- *   ___ ___ __ _| |_
- *  / __/ __/ _` | __|
- * | (_| (_| (_| | |_
- *  \___\___\__, |\__|
- *          |___/
  *
  * big thanks to joren six, olmo cornelis and marc leman
  * now using yin implementation
