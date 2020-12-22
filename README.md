@@ -27,4 +27,7 @@ console curses guitar tuner
  Instead of just doing fft, this tuner uses the yin implementation from tarsos dsp, thanx to you
  guys over at belgium ! Really every user of this app should buy you a big mug of coffee :-)))
  
+ 
+ TarsosDSP is included in this Project in the libs folder and referenced via gradle.
+ 
  greetings, and don't forget to play your guitar.
