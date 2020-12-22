@@ -9,7 +9,8 @@ console curses guitar tuner
  * now using yin implementation
  * from tarsos dsp
  *
- * JorenSix/TarsosDSP is licensed under the
+ * 
+ * JorenSix/TarsosDSP and ccgt are licensed under the
  * GNU General Public License v3.0
  * Permissions of this strong copyleft license
  * are conditioned on making available complete
