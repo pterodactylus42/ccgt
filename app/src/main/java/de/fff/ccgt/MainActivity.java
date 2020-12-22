@@ -106,14 +106,11 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        d("onCreate: ", "Audio processor starting... ");
         audioProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050, 1024, pitchDetectionHandler);
         dispatcher.addAudioProcessor(audioProcessor);
         new Thread(dispatcher, "Audio Dispatcher").start();
-        d("onCreate: ", "Audio processor running");
 
         startDisplay();
-
     }
 
     private void startDisplay() {
@@ -137,15 +134,11 @@ public class MainActivity extends AppCompatActivity {
                                         output.append("\n");
                                     }
                                     console.setText(output);
-
-/*                                    note = findViewById(R.id.note);
-                                    note.setText(tuner.getNearestNoteName());*/
-
                                 }
                             });
                         Thread.sleep(250);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
                 }
             }
@@ -174,23 +167,17 @@ public class MainActivity extends AppCompatActivity {
 		if(cents < -3) {
 			if(cents < -40) {
 				//value is too big, display it at the bottom (left)
-				//tmpstr.insert(0, "|");
 				tmpstr.setCharAt(0, '|');
 			} else {
-				//from middle, go one char to the left per 2 cents
-				//int centsHalf = Math.abs(approximateCents/2);
-				//tmpstr.insert(10-centsHalf, "|");
+				//from middle, go one char to the left per 3 cents
                 tmpstr.setCharAt(20+approximateCents/3, '|');
 			}
 		} else if (cents > 3) {
 			if(cents > 40) {
 				//value is too big, display it at the top (right)
-				//tmpstr.insert(20, "|");
                 tmpstr.setCharAt(40, '|');
 			} else {
-				//from middle, go one char to the right per 2 cents
-				//int centsHalf = approximateCents/2;
-				//tmpstr.insert(10+centsHalf, "|");
+				//from middle, go one char to the right per 3 cents
                 tmpstr.setCharAt(20+approximateCents/3, '|');
 			}
 
@@ -258,15 +245,31 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        d("centsDeviation", String.valueOf(centsDeviation));
+        //d("centsDeviation", String.valueOf(centsDeviation));
 
         return PITCHCLASS[integerDistance%12];
     }
 
+    //this is unused :-(
+    protected double log2(double value) {
+        return Math.log( value ) / Math.log( 2.0 );
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //tuner.cancelTuner();
+        displayUpdateThread.interrupt();
+        dispatcher.stop();
     }
 }

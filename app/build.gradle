@@ -4,7 +4,6 @@ plugins {
 
 android {
     compileSdkVersion 29
-/*    buildToolsVersion "30.0.2"*/
 
     defaultConfig {
         applicationId "de.fff.ccgt"
@@ -29,13 +28,15 @@ android {
 }
 
 dependencies {
-    /*implementation 'com.android.support:preference-v7:28.0.0'*/
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation files('/home/ptero/AndroidStudioProjects/ccgt/app/libs/TarsosDSP-Android-2.0.jar')
+
     testImplementation 'junit:junit:4.13.1'
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
