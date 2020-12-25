@@ -1,27 +1,10 @@
 package de.fff.ccgt;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
-import android.media.AudioTrack;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.text.Layout;
-import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
-import static android.util.Log.d;
+import androidx.appcompat.app.AppCompatActivity;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -31,6 +14,11 @@ import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
+/*
+    if you are not on the android platform, you should replace the
+    android flavour above with :
+    import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
+ */
 
 /*
  * ccgt -  concole curses guitar tuner
@@ -226,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
             for negative values of integerDistance
                 deviation up to 0.5 is displayed in negative direction
                 higher deviation is displayed from the next int in positive direction
-
          */
+
         if(integerDistance > 0) {
             if(distanceError > 0.5 || distanceError == 0.5) {
                 integerDistance++;
