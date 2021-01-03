@@ -29,6 +29,6 @@ console curses guitar tuner
  guys over at belgium ! Really every user of this app should buy you a big mug of coffee :-)))
  
  
- TarsosDSP is included in this Project in the libs folder and referenced via gradle.
+ TarsosDSP is included in this Project via gradle from maven central repository.
  
  greetings, and don't forget to play your guitar.
