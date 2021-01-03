@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/yin"
+        android:title="Yin"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/yin_fft"
+        android:title="Yin FFT"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/amdf"
+        android:title="AMDF"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/mpm"
+        android:title="MPM"
+        app:showAsAction="never"/>
+
+</menu>

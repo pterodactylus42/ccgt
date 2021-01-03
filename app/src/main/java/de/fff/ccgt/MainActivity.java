@@ -2,8 +2,14 @@ package de.fff.ccgt;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import be.tarsos.dsp.AudioDispatcher;
@@ -29,9 +35,13 @@ import be.tarsos.dsp.pitch.PitchProcessor;
  *  \___\___\__, |\__|
  *          |___/
  *
+ * just tune, don't mess with gui's :-)
+ *
+ *
  * big thanks to joren six, olmo cornelis and marc leman
- * now using yin implementation
- * from tarsos dsp
+ * now using yin implementation and some other pitch
+ * tracking algorithms from tarsos dsp
+ *
  *
  * JorenSix/TarsosDSP is licensed under the
  * GNU General Public License v3.0
@@ -55,12 +65,15 @@ public class MainActivity extends AppCompatActivity {
     private double centsDeviation = 0;
 
     private final static String PITCHCLASS[] = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
+
+    //audio config values
     private final static double REFERENCE_FREQ = 440.0;
+    private final static int SAMPLERATE = 44100;
+    private final static int BUFFERSIZE = 8192;
 
     private TextView console, note;
     private Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
-
 
     private final static int UPDATE_TUNER_VALUES = 1;
     private final static int ROWS = 20;
@@ -78,27 +91,76 @@ public class MainActivity extends AppCompatActivity {
 
         initRowHistory();
 
-        dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050, 1024,0);
-
-        pitchDetectionHandler = new PitchDetectionHandler() {
-            @Override
-            public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
-                pitchInHz = pitchDetectionResult.getPitch();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TextView text = (TextView) findViewById(R.id.note);
-                        text.setText(getNearestPitchClass(pitchInHz));
-                    }
-                });
-            }
-        };
-
-        audioProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050, 1024, pitchDetectionHandler);
-        dispatcher.addAudioProcessor(audioProcessor);
-        new Thread(dispatcher, "Audio Dispatcher").start();
+        startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
 
         startDisplay();
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.ccgt_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.yin:
+                stopAudio();
+                startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
+                Toast.makeText(this, "Yin selected", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.yin_fft:
+                stopAudio();
+                startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN);
+                Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.amdf:
+                stopAudio();
+                startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
+                Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.mpm:
+                stopAudio();
+                startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
+                Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void startAudio(Object pitchAlgorithmObject) {
+        if(dispatcher == null) {
+            dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, 0);
+
+            pitchDetectionHandler = new PitchDetectionHandler() {
+                @Override
+                public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
+                    pitchInHz = pitchDetectionResult.getPitch();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            TextView text = (TextView) findViewById(R.id.note);
+                            text.setText(getNearestPitchClass(pitchInHz));
+                        }
+                    });
+                }
+            };
+
+            audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+            dispatcher.addAudioProcessor(audioProcessor);
+            new Thread(dispatcher, "Audio Dispatcher").start();
+        }
+    }
+
+    private void stopAudio() {
+        if(dispatcher != null) {
+            dispatcher.stop();
+            dispatcher = null;
+        }
     }
 
     private void startDisplay() {
@@ -244,10 +306,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-
-    }
+    protected void onPause() { super.onPause(); }
 
     @Override
     protected void onResume() {
@@ -260,4 +319,5 @@ public class MainActivity extends AppCompatActivity {
         displayUpdateThread.interrupt();
         dispatcher.stop();
     }
+
 }
