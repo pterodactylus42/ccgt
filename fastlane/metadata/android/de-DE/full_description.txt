@@ -1,0 +1,14 @@
+Diese App ist ein Stimmgerät für Musikinstrumente und als solche simpel, einfach zu bedienen und intuitiv. Sie benötigt die Berechtigung, Audio aufnehmen zu dürfen.
+
+Anstatt nur FFT durchzuführen, verwendet diese App die yin Implementation der TarsosDSP Bibliothek, danke an JorenSix da drüben in Belgien! 
+
+Ein großer Vorteil der yin Methode gegenüber einfacher FFT ist, es gibt weniger falsch erkannte Obertöne. Wo viele Stimmgeräte Schwierigkeiten haben, ist die Fundamentalfrequenz der tiefen Gitarrensaiten. Diese App bietet - bei entsprechend ruhiger Umgebung - gute Tonerkennung.
+
+Zusätzlich kann aus vier verschiedenen Algorithmen zur Erkennung der Fundamentalfrequenz gewählt werden.
+
+Mit dem nach unten fließenden Histogramm der Tonhöhe bekommt der Nutzer einen intuitiven Zugang zum Vorgang des Stimmens.
+
+Vielen Dank an izzy für den Support, alle die mehr über das Android Smartphone erfahren wollen checkt seine Seite:
+
+https://android.izzysoft.de/articles.php
+

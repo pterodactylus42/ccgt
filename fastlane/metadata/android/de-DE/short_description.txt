@@ -1,0 +1,5 @@
+Diese Stimmgerät - App ist simpel und intuitiv. Sie betreibt minimalen Aufwand um den größten Nutzen zu bringen.
+
+Anstatt nur FFT durchzuführen, wird hier die yin implementation aus TarsosDSP verwendet. Danke an JorenSix nach Belgien!
+
+Der Benutzer kann aus vier Algorithmen zur Tonhöhenerkennung wählen.
