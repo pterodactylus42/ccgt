@@ -20,11 +20,8 @@ import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
-/*
-    if you are not on the android platform, you should replace the
-    android flavour above with :
-    import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
- */
+//import static android.util.Log.d;
+
 
 /*
  * ccgt -  concole curses guitar tuner
@@ -122,11 +119,11 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
                 Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.mpm:
+/*            case R.id.mpm:
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
                 Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
-                return true;
+                return true;*/ //sorry, that one's buggy :-(
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -282,6 +279,8 @@ public class MainActivity extends AppCompatActivity {
             if(distanceError > 0.5 || distanceError == 0.5) {
                 integerDistance++;
                 centsDeviation = (distanceError-1) * 100;
+            } else {
+                centsDeviation = distanceError * 100;
             }
         } else {
             if(distanceError > 0.5 || distanceError == 0.5) {

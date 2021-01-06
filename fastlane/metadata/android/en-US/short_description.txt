@@ -1,9 +1,2 @@
-This tuner is simple and intuitive. It is designed to get most functionality out of minimum effort.
+A simple, straightforward and intuitive chromatic tuner.
 
-What I learned from the newer Tuner Apps available on the market is, they should be intuitive.
-
-Instead of just doing fft, this tuner uses the yin implementation from tarsos dsp, thanx to you guys over at belgium ! Really every user of this app should buy you a big mug of coffee :-)))
-
-Additionally, you can choose one of four available pitch tracking algorithms.
-
-greetings, and don't forget to play your guitar.

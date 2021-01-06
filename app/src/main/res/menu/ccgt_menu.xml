@@ -13,8 +13,8 @@
         android:title="AMDF"
         app:showAsAction="never"/>
 
-    <item android:id="@+id/mpm"
+<!--    <item android:id="@+id/mpm"
         android:title="MPM"
-        app:showAsAction="never"/>
+        app:showAsAction="never"/>-->
 
 </menu>
