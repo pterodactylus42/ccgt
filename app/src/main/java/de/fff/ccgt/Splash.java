@@ -42,10 +42,12 @@ public class Splash extends AppCompatActivity {
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1234);
+        } else {
+            textView = findViewById(R.id.introTextView);
+            appendText();
         }
 
-        textView = findViewById(R.id.introTextView);
-        appendText();
+
     }
 
     private void appendText() {
@@ -63,18 +65,18 @@ public class Splash extends AppCompatActivity {
                 }
 
             }
-        }, 150);
+        }, 100);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1234: {
-                //If request is cancelled, result arrays ar,e empty
+                //If request is cancelled, result arrays are empty
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //TODO: it never happens :-(
-                    //tuner.run();
-                    d("Splash: " , "thx a lot");
+                    //ready to rumble
+                    textView = findViewById(R.id.introTextView);
+                    appendText();
                 } else {
                     d("Splash: " , "permission denied by user ....");
                 }

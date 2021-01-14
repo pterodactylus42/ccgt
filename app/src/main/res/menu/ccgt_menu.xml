@@ -9,12 +9,11 @@
         android:title="Yin FFT"
         app:showAsAction="never"/>
 
-    <item android:id="@+id/amdf"
+<!--    <item android:id="@+id/amdf"
         android:title="AMDF"
         app:showAsAction="never"/>
 
-<!--    <item android:id="@+id/mpm"
+    <item android:id="@+id/mpm"
         android:title="MPM"
         app:showAsAction="never"/>-->
-
 </menu>

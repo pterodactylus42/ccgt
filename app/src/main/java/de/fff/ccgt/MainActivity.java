@@ -20,9 +20,6 @@ import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
-//import static android.util.Log.d;
-
-
 /*
  * ccgt -  concole curses guitar tuner
  *                _
@@ -65,8 +62,9 @@ public class MainActivity extends AppCompatActivity {
 
     //audio config values
     private final static double REFERENCE_FREQ = 440.0;
-    private final static int SAMPLERATE = 44100;
-    private final static int BUFFERSIZE = 8192;
+    private final static int SAMPLERATE = 22050;
+    private final static int BUFFERSIZE = 4096;
+    private final static int OVERLAP = (BUFFERSIZE/4)*3;
 
     private TextView console, note;
     private Handler displayHandler = new Handler();
@@ -114,16 +112,16 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN);
                 Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.amdf:
+/*            case R.id.amdf:
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
                 Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
                 return true;
-/*            case R.id.mpm:
+            case R.id.mpm:
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
                 Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
-                return true;*/ //sorry, that one's buggy :-(
+                return true; //sorry, these ones are buggy :-(*/
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -131,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startAudio(Object pitchAlgorithmObject) {
         if(dispatcher == null) {
-            dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, 0);
+            dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
 
             pitchDetectionHandler = new PitchDetectionHandler() {
                 @Override
@@ -157,6 +155,11 @@ public class MainActivity extends AppCompatActivity {
         if(dispatcher != null) {
             dispatcher.stop();
             dispatcher = null;
+            try {
+                Thread.sleep(120);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -255,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
          */
 
         double distance;
-        distance = 9 + (12 * (Math.log10(freq/REFERENCE_FREQ) / Math.log10(2) ) );
+        distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
 
         int integerDistance = (int) distance;
 
@@ -294,12 +297,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        //d("centsDeviation", String.valueOf(centsDeviation));
-
         return PITCHCLASS[integerDistance%12];
     }
 
-    //this is unused :-(
     protected double log2(double value) {
         return Math.log( value ) / Math.log( 2.0 );
     }
