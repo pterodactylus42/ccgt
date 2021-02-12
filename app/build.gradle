@@ -31,16 +31,16 @@ android {
 
 dependencies {
 
-    //use the following if you want to use a local lib
-    //implementation fileTree(dir: 'libs', include: ['*'])
-
     /*
-        this app uses the latest Version of TarsosDSP available
-        on maven central. unfortunately the android specific io
-        libs are missing, these are included as sources in this
-        project ...
+        this app uses the latest Version of TarsosDSP available.
+        unfortunately the android specific io libs are missing
+        on maven central. additionally, for compatibility reasons
+        a native android variant is included here as sources.
+        specific changes are committed to
+        https://github.com/pterodactylus42/TarsosDSP
      */
-    implementation 'com.github.st-h:TarsosDSP:2.4.1'
+
+    //implementation 'com.github.st-h:TarsosDSP:2.4.1'
 
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'

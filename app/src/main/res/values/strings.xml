@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ccgt</string>
+    <string name="title_splash_screen">:~$ </string>
+    <string name="hertz_string">Hz</string>
 </resources>
