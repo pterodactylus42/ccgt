@@ -348,7 +348,7 @@ public class AudioDispatcher implements Runnable {
 	 *             been closed.
 	 */
 	private int readNextAudioBlock() throws IOException {
-		assert floatOverlap < audioFloatBuffer.length;
+		if (floatOverlap >= audioFloatBuffer.length) throw new AssertionError();
 		
 		// Is this the first buffer?
 		boolean isFirstBuffer = (bytesProcessed ==0 || bytesProcessed == bytesToSkip);

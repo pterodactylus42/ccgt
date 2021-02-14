@@ -238,7 +238,7 @@ public class AudioGenerator implements Runnable {
 	 * 
 	 */
 	private void generateNextAudioBlock() {
-		assert floatOverlap < audioFloatBuffer.length;
+		if (floatOverlap >= audioFloatBuffer.length) throw new AssertionError();
 		
 		//Shift the audio information using array copy since it is probably faster than manually shifting it.
 		// No need to do this on the first buffer

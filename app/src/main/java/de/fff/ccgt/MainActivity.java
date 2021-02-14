@@ -38,9 +38,11 @@ import be.tarsos.dsp.util.fft.FFT;
  * just tune, don't mess with gui's :-)
  *
  *
- * big thanks to joren six, olmo cornelis and marc leman
- * now using yin implementation and some other pitch
- * tracking algorithms from tarsos dsp
+ * big thanks to joren six, olmo cornelis and marc leman ...
+ * and the community! this project uses the mighty pitch
+ * tracking algorithms from tarsos dsp and its spectrogram
+ * capability.
+ *
  *
  *
  * JorenSix/TarsosDSP is licensed under the
@@ -77,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView console, note;
     private SpectrogramView spectrogramView;
     private AudioProcessor fftProcessor;
+    private TextView text, oct, freq;
 
     private Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
@@ -96,8 +99,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         spectrogramView = findViewById(R.id.spectrogram);
+        text = (TextView) findViewById(R.id.note);
+        oct = (TextView) findViewById(R.id.octave);
+        freq = (TextView) findViewById(R.id.freq);
 
-        getValidSampleRates();
+        //try this if you like ;-)
+        //getValidSampleRates();
 
         initRowHistory();
 
@@ -155,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private void startAudio(Object pitchAlgorithmObject) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
-            Log.d(TAG, "startAudio: dispatcher " + dispatcher.toString());
+            //Log.d(TAG, "startAudio: dispatcher " + dispatcher.toString());
 
             pitchDetectionHandler = new PitchDetectionHandler() {
                 @Override
@@ -164,11 +171,8 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            TextView text = (TextView) findViewById(R.id.note);
                             text.setText(getNearestPitchClass(pitchInHz));
-                            TextView oct = (TextView) findViewById(R.id.octave);
                             oct.setText(getOctave(pitchInHz));
-                            TextView freq = (TextView) findViewById(R.id.freq);
                             freq.setText(Float.toString(pitchInHz));
                         }
                     });
@@ -212,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
         if(dispatcher != null) {
             dispatcher.stop();
             dispatcher = null;
-            Log.d(TAG, "stopAudio: dispatcher is null");
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -245,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
                         Thread.sleep(250);
-                        //todo: set scrolling speed
+                        //todo: set scrolling speed via menu
                     } catch (InterruptedException e) {
                         //e.printStackTrace();
                     }

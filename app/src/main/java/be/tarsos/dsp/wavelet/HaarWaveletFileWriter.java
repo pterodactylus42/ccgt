@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
+import de.fff.ccgt.BuildConfig;
 
 public class HaarWaveletFileWriter implements AudioProcessor {
 
@@ -48,48 +49,50 @@ public class HaarWaveletFileWriter implements AudioProcessor {
 	@Override
 	public boolean process(AudioEvent audioEvent) {
 		float[] audioBuffer = audioEvent.getFloatBuffer();
-		
+
 		int placesWithZero = 0;
 		int zeroCounter = 0;
-		for(int i = 0 ; i < audioBuffer.length ; i++){
-			if(audioBuffer[i]==0 && zeroCounter < compression){
+		for (int i = 0; i < audioBuffer.length; i++) {
+			if (audioBuffer[i] == 0 && zeroCounter < compression) {
 				zeroCounter++;
-				placesWithZero = placesWithZero | (1<<i);
+				placesWithZero = placesWithZero | (1 << i);
 			}
 		}
-		
-		assert zeroCounter == compression;
-				
-		
+
+		if (BuildConfig.DEBUG && zeroCounter != compression) {
+			throw new AssertionError("Assertion failed");
+		}
+
+
 		//16 bits little endian
 		byte[] byteBuffer = new byte[(audioBuffer.length - compression) * 2];
 		zeroCounter = 0;
 		int bufferIndex = 0;
 		for (int i = 0; i < byteBuffer.length; i++) {
 			float value = audioBuffer[bufferIndex++];
-			if(value == 0  && zeroCounter < compression ){
+			if (value == 0 && zeroCounter < compression) {
 				zeroCounter++;
 				i--;
-			} else{
+			} else {
 				int x = (int) (value * 32767.0);
 				byteBuffer[i] = (byte) x;
 				i++;
-				byteBuffer[i] = (byte) (x >>> 8);	
+				byteBuffer[i] = (byte) (x >>> 8);
 			}
 		}
-		
+
 		try {
 			rawOutputStream.write(byteBuffer);
 			rawOutputStream.write((byte) placesWithZero);
-			rawOutputStream.write((byte) (placesWithZero>>>8));
-			rawOutputStream.write((byte) (placesWithZero>>>16));
-			rawOutputStream.write((byte) (placesWithZero>>>24));
-			
+			rawOutputStream.write((byte) (placesWithZero >>> 8));
+			rawOutputStream.write((byte) (placesWithZero >>> 16));
+			rawOutputStream.write((byte) (placesWithZero >>> 24));
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
+
+
 		return true;
 	}
 

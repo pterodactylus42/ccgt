@@ -108,14 +108,6 @@ public class SpectrogramView extends View {
                 canvas.drawLine(i, position, i, position + 15, pixelPaint);
             }
 
-/*            //scale drawing
-            pixelPaint.setColor(Color.LTGRAY);
-            for(int i = 500; i < 8000; i += 500) {
-                int bin = frequencyToBin(i, canvas);
-                //bufferedGraphics.drawLine(0, bin, 5, bin);
-                canvas.drawLine(bin, 0, bin, 1, pixelPaint);
-            }*/
-
             // draw the pitch slightly above the other pixels
             if(pitch != -1) {
                 int pitchIndex = frequencyToBin(pitch, canvas);
@@ -127,15 +119,9 @@ public class SpectrogramView extends View {
 
             invalidate();
 
-            //to make the spectrogram flow for each new invalidate() :-)
-            //position ++;
-            //position = position % getHeight();
-
             // fixed position
             position = getHeight() / 2;
 
         }
-
     }
-
 }

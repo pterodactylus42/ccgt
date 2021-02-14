@@ -25,6 +25,8 @@
 package be.tarsos.dsp;
 
 
+import de.fff.ccgt.BuildConfig;
+
 /**
  *
  * <p>
@@ -226,36 +228,40 @@ public class WaveformSimilarityBasedOverlapAdd implements AudioProcessor {
 	@Override
 	public boolean process(AudioEvent audioEvent) {
 		float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-		assert audioFloatBuffer.length == getInputBufferSize();
-		
+		if (BuildConfig.DEBUG && audioFloatBuffer.length != getInputBufferSize()) {
+			throw new AssertionError("Assertion failed");
+		}
+
 		//Search for the best overlapping position.
-		int offset =  seekBestOverlapPosition(audioFloatBuffer,0);
-		
+		int offset = seekBestOverlapPosition(audioFloatBuffer, 0);
+
 		// Mix the samples in the 'inputBuffer' at position of 'offset' with the 
-        // samples in 'midBuffer' using sliding overlapping
-        // ... first partially overlap with the end of the previous sequence
-        // (that's in 'midBuffer')
-		overlap(outputFloatBuffer,0,audioFloatBuffer,offset);
-			
+		// samples in 'midBuffer' using sliding overlapping
+		// ... first partially overlap with the end of the previous sequence
+		// (that's in 'midBuffer')
+		overlap(outputFloatBuffer, 0, audioFloatBuffer, offset);
+
 		//copy sequence samples from input to output			
 		int sequenceLength = seekWindowLength - 2 * overlapLength;
 		System.arraycopy(audioFloatBuffer, offset + overlapLength, outputFloatBuffer, overlapLength, sequenceLength);
-		
-	     // Copies the end of the current sequence from 'inputBuffer' to 
-        // 'midBuffer' for being mixed with the beginning of the next 
-        // processing sequence and so on
+
+		// Copies the end of the current sequence from 'inputBuffer' to
+		// 'midBuffer' for being mixed with the beginning of the next
+		// processing sequence and so on
 		System.arraycopy(audioFloatBuffer, offset + sequenceLength + overlapLength, pMidBuffer, 0, overlapLength);
-		
-		assert outputFloatBuffer.length == getOutputBufferSize();
-		
+
+		if (BuildConfig.DEBUG && outputFloatBuffer.length != getOutputBufferSize()) {
+			throw new AssertionError("Assertion failed");
+		}
+
 		audioEvent.setFloatBuffer(outputFloatBuffer);
 		audioEvent.setOverlap(0);
-		
-		if(newParameters!=null){
+
+		if (newParameters != null) {
 			applyNewParameters();
-			dispatcher.setStepSizeAndOverlap(getInputBufferSize(),getOverlap());
+			dispatcher.setStepSizeAndOverlap(getInputBufferSize(), getOverlap());
 		}
-		
+
 		return true;
 	}
 

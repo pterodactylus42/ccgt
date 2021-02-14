@@ -23,6 +23,8 @@
 
 package be.tarsos.dsp.wavelet;
 
+import de.fff.ccgt.BuildConfig;
+
 public class HaarWaveletTransform {
 		
 	private final boolean preserveEnergy;
@@ -42,23 +44,25 @@ public class HaarWaveletTransform {
 	 * It is based on the algorithm found in "Wavelets Made Easy" by Yves Nivergelt, page 24.
 	 * @param s The data to transform.
 	 */
-	public void transform(float[] s){
+	public void transform(float[] s) {
 		int m = s.length;
-		assert isPowerOfTwo(m);
+		if (BuildConfig.DEBUG && !isPowerOfTwo(m)) {
+			throw new AssertionError("Assertion failed");
+		}
 		int n = log2(m);
 		int j = 2;
 		int i = 1;
-		for(int l = 0 ; l < n ; l++ ){
-			m = m/2;
-			for(int k=0; k < m;k++){
-				float a = (s[j*k]+s[j*k + i])/2.0f;
-				float c = (s[j*k]-s[j*k + i])/2.0f;
-				if(preserveEnergy){
-					a = a/sqrtTwo;
-					c = c/sqrtTwo;
+		for (int l = 0; l < n; l++) {
+			m = m / 2;
+			for (int k = 0; k < m; k++) {
+				float a = (s[j * k] + s[j * k + i]) / 2.0f;
+				float c = (s[j * k] - s[j * k + i]) / 2.0f;
+				if (preserveEnergy) {
+					a = a / sqrtTwo;
+					c = c / sqrtTwo;
 				}
-				s[j*k] = a;
-				s[j*k+i] = c;
+				s[j * k] = a;
+				s[j * k + i] = c;
 			}
 			i = j;
 			j = j * 2;
@@ -70,27 +74,29 @@ public class HaarWaveletTransform {
      * It is based on the algorithm found in "Wavelets Made Easy" by Yves Nivergelt, page 29.
      * @param data The data to transform.
      */
-    public void inverseTransform(float[] data){
-    	int m = data.length;
-		assert isPowerOfTwo(m);
+    public void inverseTransform(float[] data) {
+		int m = data.length;
+		if (BuildConfig.DEBUG && !isPowerOfTwo(m)) {
+			throw new AssertionError("Assertion failed");
+		}
 		int n = log2(m);
-		int i = pow2(n-1);
+		int i = pow2(n - 1);
 		int j = 2 * i;
 		m = 1;
-		for(int l = n ; l >= 1; l--){
-			for(int k = 0; k < m ; k++){
-				float a = data[j*k]+data[j*k+i];
-				float a1 = data[j*k]-data[j*k+i];
-				if(preserveEnergy){
-					a = a*sqrtTwo;
-					a1 = a1*sqrtTwo;
+		for (int l = n; l >= 1; l--) {
+			for (int k = 0; k < m; k++) {
+				float a = data[j * k] + data[j * k + i];
+				float a1 = data[j * k] - data[j * k + i];
+				if (preserveEnergy) {
+					a = a * sqrtTwo;
+					a1 = a1 * sqrtTwo;
 				}
-				data[j*k] = a;
-				data[j*k+i] = a1;
+				data[j * k] = a;
+				data[j * k + i] = a1;
 			}
 			j = i;
-			i = i /2;
-			m = 2*m;
+			i = i / 2;
+			m = 2 * m;
 		}
 	}
     
