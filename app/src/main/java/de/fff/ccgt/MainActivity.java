@@ -192,8 +192,13 @@ public class MainActivity extends AppCompatActivity {
                     fft.forwardTransform(transformBuffer);
                     //modulus ... absolute value of complex fourier coefficient ... aka magnitude
                     fft.modulus(transformBuffer, amplitudes);
-                    spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
-                    spectrogramView.invalidate();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
+                            spectrogramView.invalidate();
+                        }
+                    });
                     return true;
                 }
 
@@ -203,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
+            // maybe synchronized causes issues with the message queue...
             synchronized (this) {
                 audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
@@ -247,8 +253,8 @@ public class MainActivity extends AppCompatActivity {
                                     console.setText(output);
                                 }
                             });
-                        Thread.sleep(250);
-                        //todo: set scrolling speed via menu
+                        Thread.sleep(200);
+                        //scrolling speed maybe causes issues with the message queue...
                     } catch (InterruptedException e) {
                         //e.printStackTrace();
                     }
@@ -320,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
             zero means, the note is middle c :-)
 
             referenceFreq is 440 hz
+            //todo make referenceFreq configurable via menu
 
             distance will be a double, where the part behind the
             decimal point (period) represents distance from the pitch class
