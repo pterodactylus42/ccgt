@@ -25,6 +25,8 @@
 package be.tarsos.dsp.util.fft;
 
 
+import de.fff.ccgt.BuildConfig;
+
 /**
  * Wrapper for calling a hopefully Fast Fourier transform. Makes it easy to
  * switch FFT algorithm with minimal overhead.
@@ -138,7 +140,10 @@ public final class FFT {
 	 *            The output modulus info or amplitude.
 	 */
 	public void modulus(final float[] data, final float[] amplitudes) {
-		assert data.length / 2 == amplitudes.length;
+		//another assertion less....
+		if (BuildConfig.DEBUG && data.length / 2 != amplitudes.length) {
+			throw new AssertionError("Assertion failed");
+		}
 		for (int i = 0; i < amplitudes.length; i++) {
 			amplitudes[i] = modulus(data, i);
 		}

@@ -23,6 +23,7 @@ import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
+import be.tarsos.dsp.util.fft.FFT;
 
 
 /*
@@ -74,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
     private final static int OVERLAP = (BUFFERSIZE/4)*3;
 
     private TextView console, note;
+    private SpectrogramView spectrogramView;
+    private AudioProcessor fftProcessor;
+
     private Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
 
@@ -90,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        spectrogramView = findViewById(R.id.spectrogram);
 
         getValidSampleRates();
 
@@ -160,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             TextView text = (TextView) findViewById(R.id.note);
                             text.setText(getNearestPitchClass(pitchInHz));
-                            //todo put these two in one textview, add freq textview
                             TextView oct = (TextView) findViewById(R.id.octave);
                             oct.setText(getOctave(pitchInHz));
                             TextView freq = (TextView) findViewById(R.id.freq);
@@ -170,9 +175,34 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
+            fftProcessor = new AudioProcessor() {
+
+                FFT fft = new FFT(BUFFERSIZE);
+                float[] amplitudes = new float[BUFFERSIZE * 2];
+
+                @Override
+                public boolean process(AudioEvent audioEvent) {
+                    float[] audioFloatBuffer = audioEvent.getFloatBuffer();
+                    float[] transformBuffer = new float[BUFFERSIZE * 4];
+                    System.arraycopy(audioFloatBuffer, 0 , transformBuffer, 0, audioFloatBuffer.length);
+                    fft.forwardTransform(transformBuffer);
+                    //modulus ... absolute value of complex fourier coefficient ... aka magnitude
+                    fft.modulus(transformBuffer, amplitudes);
+                    spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
+                    spectrogramView.invalidate();
+                    return true;
+                }
+
+                @Override
+                public void processingFinished() {
+                    Log.d(TAG, "processingFinished: fftProcessor");
+                }
+            };
+
             synchronized (this) {
                 audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
+                dispatcher.addAudioProcessor(fftProcessor);
                 new Thread(dispatcher, "Audio Dispatcher").start();
             }
         }
