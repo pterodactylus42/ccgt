@@ -1,5 +1,6 @@
 package de.fff.ccgt;
 
+import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.os.Bundle;
@@ -171,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            //make it fade from deep red to green
+                            text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
                             text.setText(getNearestPitchClass(pitchInHz));
                             oct.setText(getOctave(pitchInHz));
                             freq.setText(Float.toString(pitchInHz));
@@ -315,6 +318,25 @@ public class MainActivity extends AppCompatActivity {
         double distance;
         distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
         return Integer.toString((int) ((distance / 12) + 4));
+    }
+
+    private int distanceError(double freq) {
+        // returns semitone distance error to be used as argument for color
+        // caution, in the process of tuning you get values just below 1...
+        // and values just above 0 !
+        double distance;
+        distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
+        // now we have the semitone distance from middle c ...
+        // split into whole and broken semitones
+        int integerDistance = (int) distance;
+        double distanceError = Math.abs(distance - integerDistance);
+        //Log.d(TAG, "distanceError: " + distanceError);
+        // return value big enough for color generation
+        if(distanceError < 0.5) {
+            return (int) (250 * distanceError);
+        } else {
+            return (int) (250 * (1 - distanceError));
+        }
     }
 
     private String getNearestPitchClass(double freq) {
