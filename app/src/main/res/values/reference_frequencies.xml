@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="frequencyItems">
+        <item name="437 Hz">437 Hz</item>
+        <item name="438 Hz">438 Hz</item>
+        <item name="439 Hz">439 Hz</item>
+        <item name="440 Hz">440 Hz</item>
+        <item name="441 Hz">441 Hz</item>
+        <item name="442 Hz">442 Hz</item>
+        <item name="443 Hz">443 Hz</item>
+    </string-array>
+</resources>

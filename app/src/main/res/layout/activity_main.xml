@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_gravity="center"
+        android:layout_marginBottom="64dp"
         android:fontFamily="monospace"
         android:freezesText="false"
         android:inputType="textMultiLine"
@@ -22,7 +23,8 @@
         android:textSize="10sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/note"
-        tools:layout_editor_absoluteX="0dp" />
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="-52dp" />
 
     <TextView
         android:id="@+id/note"
@@ -45,6 +47,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:fontFamily="monospace"
         android:text="4"
         android:textAlignment="viewStart"
         app:layout_constraintBottom_toTopOf="@+id/console"
@@ -71,21 +74,66 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:fontFamily="monospace"
         android:text="440.0"
-        android:textAlignment="viewStart"
+        android:textAlignment="viewEnd"
         app:layout_constraintBottom_toTopOf="@+id/console"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/hertz"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:fontFamily="monospace"
         android:text="@string/hertz_string"
         app:layout_constraintBottom_toTopOf="@+id/console"
         app:layout_constraintStart_toEndOf="@+id/freq"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="monospace"
+        android:entries="@array/frequencyItems"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/calibrationText"
+        app:layout_constraintTop_toBottomOf="@+id/console" />
+
+    <TextView
+        android:id="@+id/calibrationText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="monospace"
+        android:text="calibration:"
+        android:textAlignment="viewEnd"
+        android:textColor="#CCFFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/spinner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/console" />
+
+    <SeekBar
+        android:id="@+id/calibrationSeekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="6"
+        android:progress="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/console" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

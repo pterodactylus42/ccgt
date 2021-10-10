@@ -58,7 +58,7 @@ public class SpectrogramView extends View {
     }
 
     private int frequencyToBin(final double frequency, Canvas canvas) {
-        final double minFrequency = 50; // Hz
+        final double minFrequency = 20; // Hz
         final double maxFrequency = 4000;
         int bin = 0;
         final boolean logarithmic = true;
@@ -76,7 +76,7 @@ public class SpectrogramView extends View {
                 Log.d(TAG, "frequencyToBin: binEstimate exceeds view width: " + binEstimate);
             }
             bin = canvas.getWidth() - 1 - (int) binEstimate;
-            //bin = (int) binEstimate - 1;
+            // bin = (int) binEstimate - 1;
             // if you prefer the other direction ....
         }
         return bin;
@@ -91,9 +91,11 @@ public class SpectrogramView extends View {
             float[] pixeledAmplitudes = new float[canvas.getWidth()];
 
             //iterate the frequency magnitudes array and map to pixels
-            for(int i = 0; i < amplitudes.length/2; i++) {
+            for(int i = 0; i < amplitudes.length; i++) {
+                // bin width is samplerate / buffersize...
+                // center frequency of bin is i * samplerate / buffersize
                 // get the pixel for frequency of bin i
-                int pixelX = frequencyToBin(i, canvas);
+                int pixelX = frequencyToBin( (i * (8000.0 / amplitudes.length)), canvas);
                 pixeledAmplitudes[pixelX] += amplitudes[i];
                 maxAmplitude = Math.max(pixeledAmplitudes[pixelX], maxAmplitude);
             }
@@ -105,14 +107,14 @@ public class SpectrogramView extends View {
                     final int greyValue = (int) (Math.log1p(pixeledAmplitudes[i] / maxAmplitude) / Math.log1p(1.0000001) * 255);
                     pixelPaint.setColor(Color.rgb(greyValue,greyValue,greyValue));
                 }
-                canvas.drawLine(i, position, i, position + 15, pixelPaint);
+                canvas.drawLine(i, position, i, position + 20, pixelPaint);
             }
 
             // draw the pitch slightly above the other pixels
             if(pitch != -1) {
                 int pitchIndex = frequencyToBin(pitch, canvas);
                 pixelPaint.setColor(Color.RED);
-                canvas.drawLine(pitchIndex, position - 15, pitchIndex, position, pixelPaint);
+                canvas.drawLine(pitchIndex, position - 15, pitchIndex, position + 5, pixelPaint);
             }
 
             pixelPaint.setColor(Color.BLACK);

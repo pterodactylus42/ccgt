@@ -9,6 +9,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,9 +74,11 @@ public class MainActivity extends AppCompatActivity {
     private double centsDeviation = 0;
 
     private final static String PITCHCLASS[] = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
+    private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
     //audio config values
-    private final static double REFERENCE_FREQ = 440.0;
+    // todo: put this in separate settings class
+    private double referenceFrequency = 440.0;
     private final static int SAMPLERATE = 8000;
     private final static int BUFFERSIZE = 2048;
     private final static int OVERLAP = (BUFFERSIZE/4)*3;
@@ -81,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
     private SpectrogramView spectrogramView;
     private AudioProcessor fftProcessor;
     private TextView text, oct, freq;
+    private Spinner spinner;
+    private SeekBar seekBar;
 
     private Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
@@ -90,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int COLS = 41;
 
     private String[] rowHistory = new String[ROWS];
-    private final static String firstLine = "-                   *                   +\n";
+    private final static String firstLine = "-...................*...................+\n";
 
     private double tunerLastCentsValue = 0;
 
@@ -103,9 +111,53 @@ public class MainActivity extends AppCompatActivity {
         text = (TextView) findViewById(R.id.note);
         oct = (TextView) findViewById(R.id.octave);
         freq = (TextView) findViewById(R.id.freq);
+        spinner = (Spinner) findViewById(R.id.spinner);
+        seekBar = (SeekBar) findViewById(R.id.calibrationSeekBar);
+        // set initial values
+        spinner.setSelection(3);
+        seekBar.setProgress(3);
 
         //try this if you like ;-)
         //getValidSampleRates();
+
+
+        seekBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    int progress = 0;
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar,
+                                                  int progressValue, boolean fromUser) {
+                        progress = progressValue;
+                        spinner.setSelection(progress);
+                        referenceFrequency = REFERENCE_FREQUENCIES[progress];
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+        spinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    int selection = 0;
+
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        selection = position;
+                        seekBar.setProgress(selection);
+                        referenceFrequency = REFERENCE_FREQUENCIES[selection];
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                }
+        );
 
         initRowHistory();
 
@@ -135,11 +187,11 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN);
                 Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.amdf:
-                stopAudio();
-                startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
-                Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
-                return true;
+//            case R.id.amdf:
+//                stopAudio();
+//                startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
+//                Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
+//                return true;
             case R.id.mpm:
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
@@ -176,7 +228,8 @@ public class MainActivity extends AppCompatActivity {
                             text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
                             text.setText(getNearestPitchClass(pitchInHz));
                             oct.setText(getOctave(pitchInHz));
-                            freq.setText(Float.toString(pitchInHz));
+                            // freq.setText(Float.toString(pitchInHz));
+                            freq.setText(String.format("%.02f", pitchInHz));
                         }
                     });
                 }
@@ -283,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getHistoryRow(double cents) {
 		int approximateCents = (int) cents;
-		StringBuffer tmpstr = new StringBuffer(".................... ....................\n");
+		StringBuffer tmpstr = new StringBuffer("                                         \n");
 
 		if(cents < -3) {
 			if(cents < -40) {
@@ -291,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
 				tmpstr.setCharAt(0, '|');
 			} else {
 				//from middle, go one char to the left per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '|');
+                tmpstr.setCharAt(20+approximateCents/3, '>');
 			}
 		} else if (cents > 3) {
 			if(cents > 40) {
@@ -299,11 +352,11 @@ public class MainActivity extends AppCompatActivity {
                 tmpstr.setCharAt(40, '|');
 			} else {
 				//from middle, go one char to the right per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '|');
+                tmpstr.setCharAt(20+approximateCents/3, '<');
 			}
 
 		} else {
-            tmpstr.setCharAt(20, '|');
+            tmpstr.setCharAt(20, 'I');
         }
 		return tmpstr.toString();
     }
@@ -316,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getOctave(double freq) {
         double distance;
-        distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
+        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
         return Integer.toString((int) ((distance / 12) + 4));
     }
 
@@ -325,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
         // caution, in the process of tuning you get values just below 1...
         // and values just above 0 !
         double distance;
-        distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
+        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
         // now we have the semitone distance from middle c ...
         // split into whole and broken semitones
         int integerDistance = (int) distance;
@@ -355,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
          */
 
         double distance;
-        distance = 9 + (12 * (log2(freq/REFERENCE_FREQ)  ) );
+        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
 
         int integerDistance = (int) distance;
 
