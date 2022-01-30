@@ -24,6 +24,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.filters.HighPass;
+import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
@@ -40,14 +42,13 @@ import be.tarsos.dsp.util.fft.FFT;
  *  \___\___\__, |\__|
  *          |___/
  *
- * just tune, don't mess with gui's :-)
+ * just get in tune, don't buy premium
  *
  *
  * big thanks to joren six, olmo cornelis and marc leman ...
  * and the community! this project uses the mighty pitch
  * tracking algorithms from tarsos dsp and its spectrogram
  * capability.
- *
  *
  *
  * JorenSix/TarsosDSP is licensed under the
@@ -117,10 +118,6 @@ public class MainActivity extends AppCompatActivity {
         spinner.setSelection(3);
         seekBar.setProgress(3);
 
-        //try this if you like ;-)
-        //getValidSampleRates();
-
-
         seekBar.setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     int progress = 0;
@@ -160,9 +157,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         initRowHistory();
-
         startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
-
         startDisplay();
 
     }
@@ -187,11 +182,6 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN);
                 Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
                 return true;
-//            case R.id.amdf:
-//                stopAudio();
-//                startAudio(PitchProcessor.PitchEstimationAlgorithm.AMDF);
-//                Toast.makeText(this, "AMDF selected", Toast.LENGTH_SHORT).show();
-//                return true;
             case R.id.mpm:
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
@@ -202,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // call this in OnCreate if you want to test:
     public void getValidSampleRates() {
         for(int rate : new int[] {8000, 11025, 16000, 22050, 44100, 48000, 96000}) {
             //Returns: ERROR_BAD_VALUE if the recording parameters are not supported by the hardware, [...]
@@ -215,7 +206,6 @@ public class MainActivity extends AppCompatActivity {
     private void startAudio(Object pitchAlgorithmObject) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
-            //Log.d(TAG, "startAudio: dispatcher " + dispatcher.toString());
 
             pitchDetectionHandler = new PitchDetectionHandler() {
                 @Override
@@ -224,11 +214,14 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            //make it fade from deep red to green
-                            text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                            if(pitchInHz > 0) {
+                                //make it fade from deep red to green
+                                text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                            } else {
+                                text.setTextColor(Color.WHITE);
+                            }
                             text.setText(getNearestPitchClass(pitchInHz));
                             oct.setText(getOctave(pitchInHz));
-                            // freq.setText(Float.toString(pitchInHz));
                             freq.setText(String.format("%.02f", pitchInHz));
                         }
                     });
@@ -246,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
                     float[] transformBuffer = new float[BUFFERSIZE * 4];
                     System.arraycopy(audioFloatBuffer, 0 , transformBuffer, 0, audioFloatBuffer.length);
                     fft.forwardTransform(transformBuffer);
-                    //modulus ... absolute value of complex fourier coefficient ... aka magnitude
+                    //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
                     fft.modulus(transformBuffer, amplitudes);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -264,8 +257,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-            // maybe synchronized causes issues with the message queue...
             synchronized (this) {
+                dispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
+                dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
                 audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
                 dispatcher.addAudioProcessor(fftProcessor);
@@ -309,8 +303,7 @@ public class MainActivity extends AppCompatActivity {
                                     console.setText(output);
                                 }
                             });
-                        Thread.sleep(200);
-                        //scrolling speed maybe causes issues with the message queue...
+                        Thread.sleep(255);
                     } catch (InterruptedException e) {
                         //e.printStackTrace();
                     }
@@ -383,7 +376,6 @@ public class MainActivity extends AppCompatActivity {
         // split into whole and broken semitones
         int integerDistance = (int) distance;
         double distanceError = Math.abs(distance - integerDistance);
-        //Log.d(TAG, "distanceError: " + distanceError);
         // return value big enough for color generation
         if(distanceError < 0.5) {
             return (int) (250 * distanceError);
@@ -400,8 +392,8 @@ public class MainActivity extends AppCompatActivity {
 
             zero means, the note is middle c :-)
 
-            referenceFreq is 440 hz
-            //todo make referenceFreq configurable via menu
+            referenceFreq is 440 hz initially
+            configurable via slider
 
             distance will be a double, where the part behind the
             decimal point (period) represents distance from the pitch class
