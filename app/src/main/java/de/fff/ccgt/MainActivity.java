@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int COLS = 41;
 
     private String[] rowHistory = new String[ROWS];
-    private final static String firstLine = "-...................*...................+\n";
+    private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
 
     private double tunerLastCentsValue = 0;
 
@@ -107,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setTitle(" :~$ ccgt");
 
         spectrogramView = findViewById(R.id.spectrogram);
         text = (TextView) findViewById(R.id.note);
@@ -214,13 +216,15 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(pitchInHz > 0) {
+                            if(pitchDetectionResult.isPitched()) {
                                 //make it fade from deep red to green
                                 text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                                text.setText(getNearestPitchClass(pitchInHz));
                             } else {
+                                getNearestPitchClass(pitchInHz);
                                 text.setTextColor(Color.WHITE);
+                                text.setText("-");
                             }
-                            text.setText(getNearestPitchClass(pitchInHz));
                             oct.setText(getOctave(pitchInHz));
                             freq.setText(String.format("%.02f", pitchInHz));
                         }
