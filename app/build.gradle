@@ -9,8 +9,8 @@ android {
         applicationId "de.fff.ccgt"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 1141
-        versionName "1.41"
+        versionCode 1142
+        versionName "1.42"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
