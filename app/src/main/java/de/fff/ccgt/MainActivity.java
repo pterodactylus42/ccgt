@@ -1,7 +1,10 @@
 package de.fff.ccgt;
 
+import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.os.Bundle;
 import android.os.Handler;
@@ -107,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         getSupportActionBar().setTitle(" :~$ ccgt");
 
@@ -451,10 +455,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() { super.onPause(); }
+    protected void onPause() {
+        stopAudio();
+        super.onPause();
+    }
 
     @Override
     protected void onResume() {
+        startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
         super.onResume();
     }
 
