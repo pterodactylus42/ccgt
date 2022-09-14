@@ -1,11 +1,6 @@
 package de.fff.ccgt;
 
-import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.graphics.Color;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -23,6 +18,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Objects;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -31,13 +29,12 @@ import be.tarsos.dsp.filters.HighPass;
 import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
-import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 
 
 /*
- * ccgt -  concole curses guitar tuner
+ * ccgt -  console curses guitar tuner
  *                _
  *   ___ ___ __ _| |_
  *  / __/ __/ _` | __|
@@ -72,12 +69,10 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private AudioDispatcher dispatcher;
-    private PitchDetectionHandler pitchDetectionHandler;
-    private AudioProcessor audioProcessor;
     private float pitchInHz = 0;
     private double centsDeviation = 0;
 
-    private final static String PITCHCLASS[] = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
+    private final static String[] PITCHCLASS = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
     //audio config values
@@ -87,21 +82,18 @@ public class MainActivity extends AppCompatActivity {
     private final static int BUFFERSIZE = 2048;
     private final static int OVERLAP = (BUFFERSIZE/4)*3;
 
-    private TextView console, note;
+    private TextView console;
     private SpectrogramView spectrogramView;
-    private AudioProcessor fftProcessor;
     private TextView text, oct, freq;
     private Spinner spinner;
     private SeekBar seekBar;
 
-    private Handler displayHandler = new Handler();
+    private final Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
 
-    private final static int UPDATE_TUNER_VALUES = 1;
     private final static int ROWS = 20;
-    private final static int COLS = 41;
 
-    private String[] rowHistory = new String[ROWS];
+    private final String[] rowHistory = new String[ROWS];
     private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
 
     private double tunerLastCentsValue = 0;
@@ -112,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        getSupportActionBar().setTitle(" :~$ ccgt");
+        Objects.requireNonNull(getSupportActionBar()).setTitle(" :~$ ccgt");
 
         spectrogramView = findViewById(R.id.spectrogram);
         text = (TextView) findViewById(R.id.note);
@@ -197,63 +189,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // call this in OnCreate if you want to test:
-    public void getValidSampleRates() {
-        for(int rate : new int[] {8000, 11025, 16000, 22050, 44100, 48000, 96000}) {
-            //Returns: ERROR_BAD_VALUE if the recording parameters are not supported by the hardware, [...]
-            int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-                if(bufferSize > 0) {
-                    Log.d(TAG, "getValidSampleRates: rate " + rate + " supported");
-                }
-        }
-    }
-
     private void startAudio(Object pitchAlgorithmObject) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
 
-            pitchDetectionHandler = new PitchDetectionHandler() {
-                @Override
-                public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
-                    pitchInHz = pitchDetectionResult.getPitch();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(pitchDetectionResult.isPitched()) {
-                                //make it fade from deep red to green
-                                text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
-                                text.setText(getNearestPitchClass(pitchInHz));
-                            } else {
-                                getNearestPitchClass(pitchInHz);
-                                text.setTextColor(Color.WHITE);
-                                text.setText("-");
-                            }
-                            oct.setText(getOctave(pitchInHz));
-                            freq.setText(String.format("%.02f", pitchInHz));
-                        }
-                    });
-                }
+            //make it fade from deep red to green
+            PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
+                pitchInHz = pitchDetectionResult.getPitch();
+                runOnUiThread(() -> {
+                    if (pitchDetectionResult.isPitched()) {
+                        //make it fade from deep red to green
+                        text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                        text.setText(getNearestPitchClass(pitchInHz));
+                    } else {
+                        getNearestPitchClass(pitchInHz);
+                        text.setTextColor(Color.WHITE);
+                        text.setText("-");
+                    }
+                    oct.setText(getOctave(pitchInHz));
+                    freq.setText(String.format(Locale.ENGLISH,"%.02f", pitchInHz));
+                });
             };
 
-            fftProcessor = new AudioProcessor() {
+            //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
+            AudioProcessor fftProcessor = new AudioProcessor() {
 
-                FFT fft = new FFT(BUFFERSIZE);
-                float[] amplitudes = new float[BUFFERSIZE * 2];
+                final FFT fft = new FFT(BUFFERSIZE);
+                final float[] amplitudes = new float[BUFFERSIZE * 2];
 
                 @Override
                 public boolean process(AudioEvent audioEvent) {
                     float[] audioFloatBuffer = audioEvent.getFloatBuffer();
                     float[] transformBuffer = new float[BUFFERSIZE * 4];
-                    System.arraycopy(audioFloatBuffer, 0 , transformBuffer, 0, audioFloatBuffer.length);
+                    System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
                     fft.forwardTransform(transformBuffer);
                     //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
                     fft.modulus(transformBuffer, amplitudes);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
-                            spectrogramView.invalidate();
-                        }
+                    runOnUiThread(() -> {
+                        spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
+                        spectrogramView.invalidate();
                     });
                     return true;
                 }
@@ -267,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
             synchronized (this) {
                 dispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
                 dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
-                audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+                AudioProcessor audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
                 dispatcher.addAudioProcessor(fftProcessor);
                 new Thread(dispatcher, "Audio Dispatcher").start();
@@ -289,31 +263,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void startDisplay() {
 
-        displayUpdateThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                            displayHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    console = findViewById(R.id.console);
-                                    String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
-                                    putCentsToHistory(centsString);
-                                    StringBuffer output = new StringBuffer();
-                                    output.append(firstLine);
-                                    output.append("\n");
-                                    for(int i = 0; i < rowHistory.length; i++) {
-                                        output.append(rowHistory[i]);
-                                        output.append("\n");
-                                    }
-                                    console.setText(output);
-                                }
-                            });
-                        Thread.sleep(255);
-                    } catch (InterruptedException e) {
-                        //e.printStackTrace();
-                    }
+        displayUpdateThread = new Thread(() -> {
+            while (true) {
+                try {
+                        displayHandler.post(() -> {
+                            console = findViewById(R.id.console);
+                            String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
+                            putCentsToHistory(centsString);
+                            StringBuffer output = new StringBuffer();
+                            output.append(firstLine);
+                            output.append("\n");
+                            for (String s : rowHistory) {
+                                output.append(s);
+                                output.append("\n");
+                            }
+                            console.setText(output);
+                        });
+                    Thread.sleep(255);
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
                 }
             }
         });
@@ -329,36 +297,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRowHistory(){
-        for(int i = 0; i < rowHistory.length; i++) {
-            rowHistory[i] = "";
-        }
+        Arrays.fill(rowHistory, "");
     }
 
     private String getHistoryRow(double cents) {
 		int approximateCents = (int) cents;
-		StringBuffer tmpstr = new StringBuffer("                                         \n");
+		StringBuilder tmpString = new StringBuilder("                                         \n");
 
 		if(cents < -3) {
 			if(cents < -40) {
 				//value is too big, display it at the bottom (left)
-				tmpstr.setCharAt(0, '|');
+				tmpString.setCharAt(0, '|');
 			} else {
 				//from middle, go one char to the left per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '>');
+                tmpString.setCharAt(20+approximateCents/3, '>');
 			}
 		} else if (cents > 3) {
 			if(cents > 40) {
 				//value is too big, display it at the top (right)
-                tmpstr.setCharAt(40, '|');
+                tmpString.setCharAt(40, '|');
 			} else {
 				//from middle, go one char to the right per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '<');
+                tmpString.setCharAt(20+approximateCents/3, '<');
 			}
 
 		} else {
-            tmpstr.setCharAt(20, 'I');
+            tmpString.setCharAt(20, 'I');
         }
-		return tmpstr.toString();
+		return tmpString.toString();
     }
 
     private double twoPointMovingAverageFilter(double actualCents) {
@@ -411,7 +377,6 @@ public class MainActivity extends AppCompatActivity {
 
         int integerDistance = (int) distance;
 
-        double realDistanceError = distance - integerDistance;
         double distanceError = Math.abs(distance - integerDistance);
 
         /*

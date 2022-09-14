@@ -61,23 +61,16 @@ public class SpectrogramView extends View {
         final double minFrequency = 20; // Hz
         final double maxFrequency = 4000;
         int bin = 0;
-        final boolean logarithmic = true;
-        if(frequency != 0 && frequency > minFrequency && frequency < maxFrequency) {
-            double binEstimate = 0;
-            if(logarithmic) {
-                final double minCent = PitchConverter.hertzToAbsoluteCent(minFrequency);
-                final double maxCent = PitchConverter.hertzToAbsoluteCent(maxFrequency);
-                final double absCent = PitchConverter.hertzToAbsoluteCent(frequency);
-                binEstimate = (absCent - minCent) / maxCent * canvas.getWidth();
-            } else {
-                binEstimate  = ( (frequency - minFrequency) / (maxFrequency - minFrequency) ) * canvas.getWidth();
-            }
+        if(frequency > minFrequency && frequency < maxFrequency) {
+            double binEstimate;
+            final double minCent = PitchConverter.hertzToAbsoluteCent(minFrequency);
+            final double maxCent = PitchConverter.hertzToAbsoluteCent(maxFrequency);
+            final double absCent = PitchConverter.hertzToAbsoluteCent(frequency);
+            binEstimate = (absCent - minCent) / maxCent * canvas.getWidth();
             if(binEstimate > canvas.getWidth()) {
                 Log.d(TAG, "frequencyToBin: binEstimate exceeds view width: " + binEstimate);
             }
             bin = canvas.getWidth() - 1 - (int) binEstimate;
-            // bin = (int) binEstimate - 1;
-            // if you prefer the other direction ....
         }
         return bin;
     }
