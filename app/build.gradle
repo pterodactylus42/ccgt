@@ -3,14 +3,14 @@ plugins {
 }
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 32
 
     defaultConfig {
         applicationId "de.fff.ccgt"
         minSdkVersion 23
-        targetSdkVersion 29
-        versionCode 1143
-        versionName "1.43"
+        targetSdkVersion 32
+        versionCode 1144
+        versionName "1.44"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

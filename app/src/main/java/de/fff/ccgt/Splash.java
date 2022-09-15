@@ -74,15 +74,16 @@ public class Splash extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1234: {
                 //If request is cancelled, result arrays are empty
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     //ready to rumble
                     textView = findViewById(R.id.introTextView);
                     appendText();
                 } else {
-                    d("Splash: " , "permission denied by user ....");
+                    d("Splash: ", "permission denied by user ....");
                 }
                 return;
             }
