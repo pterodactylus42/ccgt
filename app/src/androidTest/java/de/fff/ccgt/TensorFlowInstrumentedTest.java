@@ -13,10 +13,18 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import de.fff.ccgt.classify.SpiceTFLiteModel;
@@ -41,6 +49,7 @@ public class TensorFlowInstrumentedTest {
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
         long declaredLength = fileDescriptor.getDeclaredLength();
+        System.out.println("Model path: " );
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
@@ -74,29 +83,76 @@ public class TensorFlowInstrumentedTest {
     }
 
     @Test
-    public void runInferenceOnInterpreterWithModelFile(){
-        Interpreter tflite = null;
+    public void analyzeLoadedTFLiteModel(){
+        Interpreter interpreter = null;
+        Interpreter.Options interpreterOptions = new Interpreter.Options();
+        interpreterOptions.setNumThreads(1);
         try {
-            tflite = new Interpreter(loadModelFile());
-            float[] inputVal=new float[1024];
-            for(int i = 0; i < 1024; i++) {
-                inputVal[i]= (float) Math.sin(i);
+            interpreter = new Interpreter(loadModelFile(),interpreterOptions);
+            assertNotNull(interpreter);
+            System.out.println("Model has " + interpreter.getInputTensorCount() + " input tensors,");
+            System.out.println("DataType: " + interpreter.getInputTensor(0).dataType());
+            System.out.println("Dimensions: " + interpreter.getInputTensor(0).numDimensions());
+            System.out.println("NumElements: " + interpreter.getInputTensor(0).numElements());
+            System.out.println("QuantizationParams ZeroPoint: " + interpreter.getInputTensor(0).quantizationParams().getZeroPoint());
+            System.out.println("QuantizationParams Scale: " + interpreter.getInputTensor(0).quantizationParams().getScale());
+            System.out.println("- - - - - - - -");
+            System.out.println("Model has " + interpreter.getOutputTensorCount() + " output tensors,");
+            System.out.println("DataType: " + interpreter.getOutputTensor(0).dataType());
+            System.out.println("Dimensions: " + interpreter.getOutputTensor(0).numDimensions());
+            System.out.println("NumElements: " + interpreter.getOutputTensor(0).numElements());
+            System.out.println("QuantizationParams ZeroPoint: " + interpreter.getOutputTensor(0).quantizationParams().getZeroPoint());
+            System.out.println("QuantizationParams Scale: " + interpreter.getOutputTensor(0).quantizationParams().getScale());
+            System.out.println("- - - - - - - -");
+            int inputTensorIndex = 0;
+            System.out.println("Input Tensor DataType: " + interpreter.getInputTensor(inputTensorIndex).dataType());
+            System.out.print("Input Tensor Shape: ");
+            int[] inputTensorShape = interpreter.getInputTensor(inputTensorIndex).shape();
+            for(int i = 0; i < inputTensorShape.length; i++) {
+                System.out.print("["+inputTensorShape[i]+"]");
             }
-            float[] output=new float[360];
-            tflite.run(inputVal,output);
-//            return output[];
-            System.out.println("Max value in output: " + output.length);
+            System.out.println("");
+            System.out.println("- - - - - - - -");
+            int probabilityTensorIndex = 0;
+            System.out.println("Output Tensor DataType: " + interpreter.getOutputTensor(probabilityTensorIndex).dataType());
+            System.out.print("Output Tensor Shape: ");
+            int[] outputTensorShape = interpreter.getOutputTensor(probabilityTensorIndex).shape();
+            for(int i = 0; i < outputTensorShape.length; i++) {
+                System.out.print("["+outputTensorShape[i]+"]");
+            }
+            System.out.println("");
+            System.out.println("- - - - - - - -");
+
         } catch (Exception ex){
             ex.printStackTrace();
         }
     }
 
-//    private float doInference(String inputString) {
-//        float[] inputVal=new float[1];
-//        inputVal[0]=Float.parseFloat(inputString);
-//        float[][] output=new float[1][1];
-//        tflite.run(inputVal,output);
-//        return output[0][0];
-//    }
+    @Test
+    public void runInferenceOnInterpreterWithModelFile(){
+        Interpreter interpreter = null;
+        Interpreter.Options interpreterOptions = new Interpreter.Options();
+        
+        try {
+            interpreterOptions.setNumThreads(1);
+            interpreter = new Interpreter(loadModelFile(),interpreterOptions);
 
+            int inputTensorIndex = 0;
+            DataType inputDataType = interpreter.getInputTensor(inputTensorIndex).dataType();
+            int[] inputShape = interpreter.getInputTensor(inputTensorIndex).shape();
+            int probabilityTensorIndex = 0;
+            int[] probabilityShape =
+                    interpreter.getOutputTensor(probabilityTensorIndex).shape();  // {1, NUM_CLASSES}
+            DataType probabilityDataType = interpreter.getOutputTensor(probabilityTensorIndex).dataType();
+
+            TensorBuffer inputBuffer = TensorBuffer.createFixedSize(inputShape, inputDataType);
+            TensorBuffer outputBuffer = TensorBuffer.createFixedSize(probabilityShape, probabilityDataType);
+
+            interpreter.allocateTensors();
+            interpreter.run(inputBuffer.getBuffer(), outputBuffer.getBuffer().rewind());
+
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
 }
