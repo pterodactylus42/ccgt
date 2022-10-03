@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.gpu.GpuDelegate;
+import org.tensorflow.lite.nnapi.NnApiDelegate;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -17,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
@@ -27,7 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import de.fff.ccgt.classify.SpiceTFLiteModel;
+//import de.fff.ccgt.classify.SpiceTFLiteModel;
+
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -44,12 +48,11 @@ public class TensorFlowInstrumentedTest {
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
-        AssetFileDescriptor fileDescriptor = InstrumentationRegistry.getInstrumentation().getTargetContext().getAssets().openFd("tflite_model_tiny.tflite");
+        AssetFileDescriptor fileDescriptor = InstrumentationRegistry.getInstrumentation().getTargetContext().getAssets().openFd("SpiceModel.tflite");
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
         long declaredLength = fileDescriptor.getDeclaredLength();
-        System.out.println("Model path: " );
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
@@ -57,29 +60,6 @@ public class TensorFlowInstrumentedTest {
     public void loadModelFileTest() throws IOException {
         MappedByteBuffer mappedByteBuffer = loadModelFile();
         assertNotNull(mappedByteBuffer);
-    }
-
-    @Test
-    public void loadModelObjectTest() {
-        try
-        {
-            SpiceTFLiteModel model = new SpiceTFLiteModel(InstrumentationRegistry.getInstrumentation().getTargetContext());
-
-            // Creates inputs for reference.
-            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 1024}, DataType.FLOAT32);
-            //inputFeature0.loadBuffer(byteBuffer);
-
-            // Runs model inference and gets result.
-            // SpiceTFLiteModel.Outputs outputs = model.process(inputFeature0);
-            // TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
-
-            // Releases model resources if no longer used.
-            model.close();
-        }
-        catch (IOException e)
-        {
-            // TODO Handle the exception
-        }
     }
 
     @Test
@@ -129,28 +109,51 @@ public class TensorFlowInstrumentedTest {
     }
 
     @Test
-    public void runInferenceOnInterpreterWithModelFile(){
+    public void runInterpreterWithModelFile(){
         Interpreter interpreter = null;
         Interpreter.Options interpreterOptions = new Interpreter.Options();
-        
+        interpreterOptions.setNumThreads(1);
+
+        float[] sinewaveArray = new float[1024];
+        for(int i = 0; i < sinewaveArray.length; i++) {
+            sinewaveArray[i] = (float) Math.sin(i);
+        }
+
         try {
-            interpreterOptions.setNumThreads(1);
             interpreter = new Interpreter(loadModelFile(),interpreterOptions);
 
             int inputTensorIndex = 0;
             DataType inputDataType = interpreter.getInputTensor(inputTensorIndex).dataType();
-            int[] inputShape = interpreter.getInputTensor(inputTensorIndex).shape();
-            int probabilityTensorIndex = 0;
-            int[] probabilityShape =
-                    interpreter.getOutputTensor(probabilityTensorIndex).shape();  // {1, NUM_CLASSES}
-            DataType probabilityDataType = interpreter.getOutputTensor(probabilityTensorIndex).dataType();
 
-            TensorBuffer inputBuffer = TensorBuffer.createFixedSize(inputShape, inputDataType);
-            TensorBuffer outputBuffer = TensorBuffer.createFixedSize(probabilityShape, probabilityDataType);
+            TensorBuffer inputBuffer = TensorBuffer.createDynamic(inputDataType);
+            inputBuffer.loadArray(sinewaveArray, new int[] {sinewaveArray.length});
 
-            interpreter.allocateTensors();
-            interpreter.run(inputBuffer.getBuffer(), outputBuffer.getBuffer().rewind());
+            // The shape of *1* output's tensor
+            int[] OutputShape = {3};
+            // The type of the *1* output's tensor
+            DataType OutputDataType;
+            // The multi-tensor ready storage
+            HashMap<Integer, Object> outputProbabilityBuffers = new HashMap<>();
+            ByteBuffer x;
+            // For each model's tensors (there are getOutputTensorCount() of them for this tflite model)
+            for (int i = 0; i < interpreter.getOutputTensorCount(); i++) {
+                OutputDataType = interpreter.getOutputTensor(i).dataType();
+                x = TensorBuffer.createFixedSize(OutputShape, OutputDataType).getBuffer();
+                outputProbabilityBuffers.put(i, x);
+                System.out.println("Created a buffer of " + x.limit() + " bytes for tensor " + i +".");
+            }
 
+            System.out.println("Created a tflite output of " + outputProbabilityBuffers.size() + " output tensors.");
+
+            Object[] inputs = { sinewaveArray };
+            interpreter.runForMultipleInputsOutputs(inputs,outputProbabilityBuffers);
+
+            outputProbabilityBuffers.forEach( (zahl,bytes) -> {
+                System.out.println("Arrayindex: " + zahl);
+                System.out.println(((ByteBuffer)bytes).get(0));
+                System.out.println(((ByteBuffer)bytes).get(1));
+                System.out.println(((ByteBuffer)bytes).get(2));
+            });
         } catch (Exception ex){
             ex.printStackTrace();
         }

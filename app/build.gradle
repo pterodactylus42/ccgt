@@ -9,6 +9,7 @@ android {
         applicationId "de.fff.ccgt"
         minSdkVersion 23
         targetSdkVersion 33
+
         versionCode 1143
         versionName "1.43"
 
@@ -25,11 +26,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    buildFeatures {
-        mlModelBinding true
-    }
-    aaptOptions {
-        noCompress "tflite"
+//    buildFeatures{
+//        dataBinding = true
+//        mlModelBinding true
+//    }
+//    aaptOptions {
+//        noCompress "tflite"
+//    }
+    androidResources {
+        noCompress 'tflite'
     }
 }
 
@@ -47,10 +52,13 @@ dependencies {
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+
     implementation 'org.tensorflow:tensorflow-lite:2.4.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
     implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
+//    implementation 'org.tensorflow:tensorflow-lite-task-audio:0.4.0'
+    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:0.0.0-nightly-SNAPSHOT'
 
     testImplementation 'junit:junit:4.13.1'
 

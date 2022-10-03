@@ -165,14 +165,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private MappedByteBuffer loadModelFile() throws IOException {
-        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd("tflite_model_tiny.tflite");
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-        FileChannel fileChannel = inputStream.getChannel();
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-    }
+//    private MappedByteBuffer loadModelFile() throws IOException {
+//        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd("tflite_model_tiny.tflite");
+//        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+//        FileChannel fileChannel = inputStream.getChannel();
+//        long startOffset = fileDescriptor.getStartOffset();
+//        long declaredLength = fileDescriptor.getDeclaredLength();
+//        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
