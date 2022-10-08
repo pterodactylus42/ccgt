@@ -55,10 +55,9 @@ dependencies {
 
     implementation 'org.tensorflow:tensorflow-lite:2.4.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
-    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
-    implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
-//    implementation 'org.tensorflow:tensorflow-lite-task-audio:0.4.0'
-    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:0.0.0-nightly-SNAPSHOT'
+//    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
+//    implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
+    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:0.0.0-nightly'
 
     testImplementation 'junit:junit:4.13.1'
 
