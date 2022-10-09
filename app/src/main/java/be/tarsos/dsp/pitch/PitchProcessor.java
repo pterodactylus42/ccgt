@@ -77,15 +77,22 @@ public class PitchProcessor implements AudioProcessor {
 		 * (AMDF) from an audio buffer. This is a good measure of the Pitch (f0)
 		 * of a signal.
 		 */
-		AMDF;
-		
+		AMDF,
+		/**
+		 * A pitch extractor that is built around google's Spice-Model.
+		 * you have to load the model from somewhere and pass it to the
+		 * constructor as a MappedByteBuffer.
+		 * The model only accepts Samplerate 16000 and Buffersize 1024.
+		 */
+		SPICE;
+
 		/**
 		 * Returns a new instance of a pitch detector object based on the provided values.
 		 * @param sampleRate The sample rate of the audio buffer.
 		 * @param bufferSize The size (in samples) of the audio buffer.
 		 * @return A new pitch detector object.
 		 */
-		public PitchDetector getDetector(float sampleRate,int bufferSize){
+		public PitchDetector createDetector(float sampleRate, int bufferSize){
 			PitchDetector detector;
 			if (this == MPM ) {
 				detector = new McLeodPitchMethod(sampleRate, bufferSize);
@@ -97,12 +104,13 @@ public class PitchProcessor implements AudioProcessor {
 				detector = new AMDF(sampleRate, bufferSize);
 			} else if (this == FFT_PITCH){
 				detector = new FFTPitch(Math.round(sampleRate),bufferSize);
+			} else if (this == SPICE) {
+				detector = new Spice(sampleRate,bufferSize);
 			} else {
 				detector = new Yin(sampleRate, bufferSize);
 			}
 			return detector;
 		}
-		
 	};
 	
 	/**
@@ -127,10 +135,14 @@ public class PitchProcessor implements AudioProcessor {
 	public PitchProcessor(PitchEstimationAlgorithm algorithm, float sampleRate,
 			int bufferSize,
 			PitchDetectionHandler handler) {
-		detector = algorithm.getDetector(sampleRate, bufferSize);
+		detector = algorithm.createDetector(sampleRate, bufferSize);
 		this.handler = handler;	
 	}
-	
+
+	public PitchDetector getDetector() {
+		return detector;
+	}
+
 	@Override
 	public boolean process(AudioEvent audioEvent) {
 		float[] audioFloatBuffer = audioEvent.getFloatBuffer();

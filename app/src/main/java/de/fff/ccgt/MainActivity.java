@@ -34,7 +34,10 @@ import be.tarsos.dsp.filters.HighPass;
 import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
+import be.tarsos.dsp.pitch.PitchDetector;
 import be.tarsos.dsp.pitch.PitchProcessor;
+import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
+import be.tarsos.dsp.pitch.Spice;
 import be.tarsos.dsp.util.fft.FFT;
 
 
@@ -72,6 +75,10 @@ import be.tarsos.dsp.util.fft.FFT;
 public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
+    private static final String SPICE_MODEL = "SpiceModel.tflite";
+    // not supported yet :-¡
+    // private static final String CREPE_MODEL = "CrepeModel.tflite";
+
 
     private AudioDispatcher dispatcher;
     private float pitchInHz = 0;
@@ -83,8 +90,9 @@ public class MainActivity extends AppCompatActivity {
     //audio config values
     // todo: put this in separate settings class
     private double referenceFrequency = 440.0;
-    private final static int SAMPLERATE = 8000;
-    private final static int BUFFERSIZE = 2048;
+    // tweaked values for Spice model: legacy was 8000 and 2048
+    private final static int SAMPLERATE = 16000;
+    private final static int BUFFERSIZE = 1024;
     private final static int OVERLAP = (BUFFERSIZE/4)*3;
 
     private TextView console;
@@ -107,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Objects.requireNonNull(getSupportActionBar()).setTitle(" :~$ ccgt");
 
@@ -159,20 +166,20 @@ public class MainActivity extends AppCompatActivity {
         );
 
         initRowHistory();
-        startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
+        startAudio(PitchEstimationAlgorithm.YIN);
         startDisplay();
-
 
     }
 
-//    private MappedByteBuffer loadModelFile() throws IOException {
-//        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd("tflite_model_tiny.tflite");
-//        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-//        FileChannel fileChannel = inputStream.getChannel();
-//        long startOffset = fileDescriptor.getStartOffset();
-//        long declaredLength = fileDescriptor.getDeclaredLength();
-//        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-//    }
+    private MappedByteBuffer loadSpiceModelFile() throws IOException {
+
+        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd(SPICE_MODEL);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -186,25 +193,30 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.yin:
                 stopAudio();
-                startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
+                startAudio(PitchEstimationAlgorithm.YIN);
                 Toast.makeText(this, "Yin selected", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.yin_fft:
                 stopAudio();
-                startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN);
+                startAudio(PitchEstimationAlgorithm.FFT_YIN);
                 Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.mpm:
                 stopAudio();
-                startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
+                startAudio(PitchEstimationAlgorithm.MPM);
                 Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.spice:
+                stopAudio();
+                startAudio(PitchEstimationAlgorithm.SPICE);
+                Toast.makeText(this, "Spice selected", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    private void startAudio(Object pitchAlgorithmObject) {
+    private void startAudio(PitchEstimationAlgorithm pitchAlgorithmObject) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
 
@@ -256,7 +268,15 @@ public class MainActivity extends AppCompatActivity {
             synchronized (this) {
                 dispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
                 dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
-                AudioProcessor audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+                AudioProcessor audioProcessor = new PitchProcessor(pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+                if(pitchAlgorithmObject.equals(PitchEstimationAlgorithm.SPICE)) {
+                    Spice detector = (Spice)((PitchProcessor) audioProcessor).getDetector();
+                    try {
+                        detector.setSpiceModel(loadSpiceModelFile());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 dispatcher.addAudioProcessor(audioProcessor);
                 dispatcher.addAudioProcessor(fftProcessor);
                 new Thread(dispatcher, "Audio Dispatcher").start();
