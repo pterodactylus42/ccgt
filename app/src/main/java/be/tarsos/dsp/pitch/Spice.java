@@ -20,6 +20,11 @@ public class Spice implements PitchDetector {
     public static final int DEFAULT_SAMPLERATE = 16000;
 
     /**
+     * The default samplerate which is mandatory in this PitchDetector due to the used model.
+     */
+    public static final float CONFIDENCE_THRESHOLD = 0.9f;
+
+    /**
      * The TensorFlow model handed over as a MappedByteBuffer.
      */
     private MappedByteBuffer tensorFlowModel;
@@ -55,9 +60,6 @@ public class Spice implements PitchDetector {
         assert audioBuffer.length  == DEFAULT_BUFFER_SIZE;
         assert tensorFlowModel != null;
 
-        int inputTensorIndex = 0;
-        DataType inputDataType = interpreter.getInputTensor(inputTensorIndex).dataType();
-
         // 1024 samples == 64 ms audio == three pitch estimations by spice
         // as it chunks every 32 ms (0 32 64)
         int[] OutputShape = {3};
@@ -75,12 +77,20 @@ public class Spice implements PitchDetector {
         interpreter.runForMultipleInputsOutputs(inputs,outputProbabilityBuffers);
 
         ByteBuffer p = (ByteBuffer) outputProbabilityBuffers.get(0);
+        assert p != null;
         ByteBuffer u = (ByteBuffer) outputProbabilityBuffers.get(1);
+        assert u != null;
+        int indexOfMaximumConfidence = getIndexOfMaximumConfidence(u);
 
-        result.setProbability((float) (1 - u.getFloat(4)));
-        result.setPitch(spicePitch2Hz(p.getFloat(4)));
-        // TODO: 09.10.22 how to accomplish isPitched?
-        if(result.getProbability() > 0.5f) result.setPitched(true);
+        if(result.getProbability() > CONFIDENCE_THRESHOLD) {
+            result.setProbability((1 - u.getFloat(indexOfMaximumConfidence)));
+            result.setPitch(spicePitch2Hz(p.getFloat(indexOfMaximumConfidence)));
+            result.setPitched(true);
+        } else {
+            result.setProbability((1 - u.getFloat(indexOfMaximumConfidence)));
+            result.setPitch(-1);
+            result.setPitched(false);
+        }
         return result;
     }
 
@@ -95,8 +105,7 @@ public class Spice implements PitchDetector {
 
     private boolean isSpiceModelLoaded(final Interpreter interpreter) {
         assert interpreter != null;
-        boolean result = true;
-        if(interpreter.getInputTensorCount() != 1) result = false;
+        boolean result = interpreter.getInputTensorCount() == 1;
         if(interpreter.getInputTensor(0).dataType() != DataType.FLOAT32) result = false;
         if(interpreter.getInputTensor(0).numDimensions() != 1) result = false;
         if(interpreter.getInputTensor(0).numElements() != 1) result = false;
@@ -113,4 +122,15 @@ public class Spice implements PitchDetector {
         return result;
     }
 
+    private int getIndexOfMaximumConfidence(final ByteBuffer buffer)
+    {
+        float[] confidences = new float[3];
+        confidences[0] = 1- buffer.getFloat(0);
+        confidences[1] = 1- buffer.getFloat(4);
+        confidences[2] = 1- buffer.getFloat(8);
+        if(confidences[0] > confidences[1] && confidences[0] > confidences[2]) return 0;
+        if(confidences[1] > confidences[0] && confidences[1] > confidences[2]) return 4;
+        if(confidences[2] > confidences[1] && confidences[2] > confidences[0]) return 8;
+        return 4;
+    }
 }
