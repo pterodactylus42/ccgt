@@ -8,14 +8,14 @@ import java.net.URISyntaxException;
 public class TensorFlowUnitTest {
     @Test
     public void testLoadPackageLocalFile() {
-        File file = new File("howtoPublish-fDroid");
+        File file = new File("packagelocalfile");
         assertNotNull(file);
         System.out.println(file.getAbsolutePath());
     }
 
     @Test
     public void testLoadModel() throws URISyntaxException {
-        File tfLiteModel = new File("/Users/carstenneubauer/StudioProjects/ccgt/app/src/main/ml/tflite_model_tiny.tflite");
+        File tfLiteModel = new File("app/src/main/assets/SpiceModel.tflite");
         assertNotNull(tfLiteModel);
         System.out.println(tfLiteModel.getAbsolutePath());
     }

@@ -87,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
     private final static String[] PITCHCLASS = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
+    private final static int SLOPPY_DISPLAY = 366;
+    private final static int SPEEDY_DISPLAY = 255;
+
     //audio config values
     // todo: put this in separate settings class
     private double referenceFrequency = 440.0;
@@ -172,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MappedByteBuffer loadSpiceModelFile() throws IOException {
-
         AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd(SPICE_MODEL);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
@@ -238,16 +240,14 @@ public class MainActivity extends AppCompatActivity {
                 });
             };
 
-            //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
             AudioProcessor fftProcessor = new AudioProcessor() {
-
                 final FFT fft = new FFT(BUFFERSIZE);
-                final float[] amplitudes = new float[BUFFERSIZE * 2];
+                final float[] amplitudes = new float[BUFFERSIZE];
 
                 @Override
                 public boolean process(AudioEvent audioEvent) {
                     float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-                    float[] transformBuffer = new float[BUFFERSIZE * 4];
+                    float[] transformBuffer = new float[BUFFERSIZE * 2];
                     System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
                     fft.forwardTransform(transformBuffer);
                     //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
@@ -266,8 +266,6 @@ public class MainActivity extends AppCompatActivity {
             };
 
             synchronized (this) {
-                dispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
-                dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
                 AudioProcessor audioProcessor = new PitchProcessor(pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 if(pitchAlgorithmObject.equals(PitchEstimationAlgorithm.SPICE)) {
                     Spice detector = (Spice)((PitchProcessor) audioProcessor).getDetector();
@@ -276,9 +274,13 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    dispatcher.addAudioProcessor(new LowPassFS(7000, SAMPLERATE));
+                    dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
+                    dispatcher.addAudioProcessor(fftProcessor);
                 }
+
                 dispatcher.addAudioProcessor(audioProcessor);
-                dispatcher.addAudioProcessor(fftProcessor);
                 new Thread(dispatcher, "Audio Dispatcher").start();
             }
         }
@@ -297,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startDisplay() {
-
         displayUpdateThread = new Thread(() -> {
             while (true) {
                 try {
@@ -314,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             console.setText(output);
                         });
-                    Thread.sleep(255);
+                    Thread.sleep(SLOPPY_DISPLAY);
                 } catch (InterruptedException e) {
                     //e.printStackTrace();
                 }
@@ -322,7 +323,6 @@ public class MainActivity extends AppCompatActivity {
         });
         displayUpdateThread.start();
     }
-
 
     private void putCentsToHistory(String centsString){
         for(int i = rowHistory.length-1; i > 0; i--) {

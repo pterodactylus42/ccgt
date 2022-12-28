@@ -20,9 +20,9 @@ public class Spice implements PitchDetector {
     public static final int DEFAULT_SAMPLERATE = 16000;
 
     /**
-     * The default samplerate which is mandatory in this PitchDetector due to the used model.
+     * The confidence threshold for results to be taken into account.
      */
-    public static final float CONFIDENCE_THRESHOLD = 0.9f;
+    public static final float CONFIDENCE_THRESHOLD = 0.9423f;
 
     /**
      * The TensorFlow model handed over as a MappedByteBuffer.
@@ -59,6 +59,9 @@ public class Spice implements PitchDetector {
     public PitchDetectionResult getPitch(float[] audioBuffer) {
         assert audioBuffer.length  == DEFAULT_BUFFER_SIZE;
         assert tensorFlowModel != null;
+        for(float f : audioBuffer) {
+            assert f < 1.1 && f > -1.1;
+        }
 
         // 1024 samples == 64 ms audio == three pitch estimations by spice
         // as it chunks every 32 ms (0 32 64)
@@ -76,18 +79,19 @@ public class Spice implements PitchDetector {
         Object[] inputs = { audioBuffer };
         interpreter.runForMultipleInputsOutputs(inputs,outputProbabilityBuffers);
 
-        ByteBuffer p = (ByteBuffer) outputProbabilityBuffers.get(0);
-        assert p != null;
-        ByteBuffer u = (ByteBuffer) outputProbabilityBuffers.get(1);
-        assert u != null;
-        int indexOfMaximumConfidence = getIndexOfMaximumConfidence(u);
+        ByteBuffer pitches = (ByteBuffer) outputProbabilityBuffers.get(0);
+        assert pitches != null;
+        ByteBuffer uncertainties = (ByteBuffer) outputProbabilityBuffers.get(1);
+        assert uncertainties != null;
+        int indexOfMaximumConfidence = getIndexOfMaximumConfidence(uncertainties);
+        float confidence = 1 - uncertainties.getFloat(indexOfMaximumConfidence);
 
-        if(result.getProbability() > CONFIDENCE_THRESHOLD) {
-            result.setProbability((1 - u.getFloat(indexOfMaximumConfidence)));
-            result.setPitch(spicePitch2Hz(p.getFloat(indexOfMaximumConfidence)));
+        if(confidence > CONFIDENCE_THRESHOLD) {
+            result.setProbability(confidence);
+            result.setPitch(spicePitch2Hz(pitches.getFloat(indexOfMaximumConfidence)));
             result.setPitched(true);
         } else {
-            result.setProbability((1 - u.getFloat(indexOfMaximumConfidence)));
+            result.setProbability((1 - uncertainties.getFloat(indexOfMaximumConfidence)));
             result.setPitch(-1);
             result.setPitched(false);
         }

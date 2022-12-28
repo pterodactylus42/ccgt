@@ -80,7 +80,7 @@ public class PitchProcessor implements AudioProcessor {
 		AMDF,
 		/**
 		 * A pitch extractor that is built around google's Spice-Model.
-		 * you have to load the model from somewhere and pass it to the
+		 * You have to load the model from somewhere and pass it to the
 		 * constructor as a MappedByteBuffer.
 		 * The model only accepts Samplerate 16000 and Buffersize 1024.
 		 */

@@ -13,6 +13,9 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import static java.lang.Float.NaN;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,6 +35,7 @@ public class TensorFlowInstrumentedTest {
 
     private static final String SPICE_MODEL = "SpiceModel.tflite";
     private static final String CREPE_MODEL = "CrepeModel.tflite";
+    private static final String WAVEFILE = "whistle.wav";
 
     @Test
     public void useAppContext() {
@@ -55,6 +59,15 @@ public class TensorFlowInstrumentedTest {
         long startOffset = fileDescriptor.getStartOffset();
         long declaredLength = fileDescriptor.getDeclaredLength();
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    }
+
+    private ByteBuffer loadWaveBytes() throws IOException {
+        AssetFileDescriptor fileDescriptor = InstrumentationRegistry.getInstrumentation().getTargetContext().getAssets().openFd(WAVEFILE);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        // TODO: 28.12.22 create constants for 4*float_size and the like
+        MappedByteBuffer byteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 45L, 4096L);
+        return byteBuffer.asReadOnlyBuffer();
     }
 
     @Test
@@ -221,50 +234,6 @@ public class TensorFlowInstrumentedTest {
     }
 
     @Test
-    public void getPitchResultWithSpiceModelFile() {
-        Interpreter interpreter;
-        Interpreter.Options interpreterOptions = new Interpreter.Options();
-        interpreterOptions.setNumThreads(1);
-
-        try {
-            interpreter = new Interpreter(loadSpiceModelFile(),interpreterOptions);
-
-            int inputTensorIndex = 0;
-            DataType inputDataType = interpreter.getInputTensor(inputTensorIndex).dataType();
-
-            // 1024 samples == 64 ms audio == three pitch estimations by spice
-            // as it chunks every 32 ms (0 32 64)
-            int[] OutputShape = {3};
-            DataType OutputDataType;
-            HashMap<Integer, Object> outputProbabilityBuffers = new HashMap<>();
-            ByteBuffer x;
-            for (int i = 0; i < interpreter.getOutputTensorCount(); i++) {
-                OutputDataType = interpreter.getOutputTensor(i).dataType();
-                x = TensorBuffer.createFixedSize(OutputShape, OutputDataType).getBuffer();
-                outputProbabilityBuffers.put(i, x);
-                System.out.println("Created a buffer of " + x.limit() + " bytes for tensor " + i +".");
-            }
-
-            System.out.println("Created a tflite output of " + outputProbabilityBuffers.size() + " output tensors.");
-
-            Object[] inputs = { createSinewaveArray() };
-            interpreter.runForMultipleInputsOutputs(inputs,outputProbabilityBuffers);
-
-            ByteBuffer p = (ByteBuffer) outputProbabilityBuffers.get(0);
-            System.out.println("pitch : ");
-                float currentFloat = p.getFloat(4);
-                System.out.println("buffer in end position: " + p.position() + " pitch : " + currentFloat + " " + spicePitch2Hz(currentFloat) + " Hz");
-            ByteBuffer u = (ByteBuffer) outputProbabilityBuffers.get(1);
-            System.out.println("uncertainty : ");
-                float currentUncertainty = u.getFloat(4);
-                System.out.println("buffer in end position: " + u.position() + " uncertainty : " + currentUncertainty + " confidence : " + (1 - currentUncertainty));
-
-        } catch (Exception ex){
-            ex.printStackTrace();
-        }
-    }
-
-    @Test
     public void testGetPitchSpiceTarsosDSP() {
         Spice tarsosSpicePitchDetector = null;
         try {
@@ -287,6 +256,87 @@ public class TensorFlowInstrumentedTest {
             sinewaveArray[i] = (float) Math.sin(i);
         }
         return sinewaveArray;
+    }
+
+    private float[][] createSinewaveArray2D() {
+        float[][] sinewaveArray = new float[1][1024];
+        for(int i = 0; i < sinewaveArray.length; i++) {
+            sinewaveArray[0][i] = (float) Math.sin(i);
+        }
+        return sinewaveArray;
+    }
+
+    private float[][] createSinewave440() {
+        float[][] sinewaveArray = new float[1][1024];
+        int sampleRate = 16000;
+        int freq = 440;
+        double samplingInterval = (double) sampleRate / freq;
+        for(int i = 0; i < sinewaveArray.length; i++) {
+            double angle = (2.0 * Math.PI * i) / samplingInterval;
+            sinewaveArray[0][i] = (float) Math.sin(angle) * 127;
+        }
+        return sinewaveArray;
+    }
+
+    @Test
+    public void loadWaveBytesTest() throws IOException {
+        ByteBuffer bytes = loadWaveBytes();
+        assertNotNull(bytes);
+        while(bytes.hasRemaining()) {
+            System.out.println("WaveBytes : " + bytes.getFloat());
+        }
+    }
+
+    @Test
+    public void loadFloatArrayFromWavefileTest() throws IOException {
+        float[][] floatArray = loadFloatArrayForModel();
+        assertNotNull(floatArray);
+        for(int i = 0; i < floatArray[0].length; i++) {
+            assertTrue("NaN values are not permitted", !Float.isNaN(floatArray[0][i]));
+            System.out.println("Float from wavefile at index " + i + " " + floatArray[0][i]);
+        }
+    }
+
+    private float[][] loadFloatArrayForModel() {
+        float[][] floatArray = new float[1][1024];
+        ByteBuffer b = null;
+        try {
+            b = loadWaveBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        float testValue = NaN;
+        int positionForNextTry = 0;
+        while(Float.isNaN(testValue) && positionForNextTry < 1024) {
+            testValue = b.getFloat();
+            if(testValue == NaN) {
+                b.rewind();
+                positionForNextTry++;
+                b.position(positionForNextTry);
+                System.out.println("Wavefile has no sane value at index " + positionForNextTry + " retrying from next element.");
+            } else {
+                b.position(positionForNextTry);
+                System.out.println("Entering Wavefile at index " + positionForNextTry);
+            }
+        }
+        float maximum = 0.0f;
+        for(int i = 0; i < floatArray[0].length; i++) {
+            floatArray[0][i] = b.getFloat();
+            if(Float.isNaN(floatArray[0][i]) ) {
+                System.out.println("Wavefile corrupted at index " + i + " value " + floatArray[0][i] + " setting a guessed new value");
+                if(i > 0 && i < floatArray[0].length) {
+                    floatArray[0][i] = (floatArray[0][i-1] + floatArray[0][i+1]) / 2;
+                } else {
+                    System.out.println("Warning: could not repair file at index " + i + " ...  setting to zero");
+                    floatArray[0][i] = 0.0f;
+                }
+            }
+            if(floatArray[0][i] > maximum) maximum = floatArray[0][i];
+        }
+        for(int i = 0; i < floatArray[0].length; i++) {
+            floatArray[0][i] = (floatArray[0][i] / maximum);
+        }
+        return floatArray;
     }
 
     @Test
@@ -322,4 +372,134 @@ public class TensorFlowInstrumentedTest {
 
         return result;
     }
+
+    private boolean isCrepeModelLoaded(final Interpreter interpreter) {
+        assert interpreter != null;
+        boolean result = true;
+
+        if(interpreter.getInputTensorCount() != 1) result = false;
+        if(interpreter.getInputTensor(0).dataType() != DataType.FLOAT32) result = false;
+        if(interpreter.getInputTensor(0).numDimensions() != 2) result = false;
+        if(interpreter.getInputTensor(0).numElements() != 1024) result = false;
+        if(interpreter.getInputTensor(0).quantizationParams().getZeroPoint() != 0) result = false;
+        if(interpreter.getInputTensor(0).quantizationParams().getScale() != 0.0f) result = false;
+
+        if(interpreter.getOutputTensorCount() != 1) result = false;
+        if(interpreter.getOutputTensor(0).dataType() != DataType.FLOAT32) result = false;
+        if(interpreter.getOutputTensor(0).numDimensions() != 2) result = false;
+        if(interpreter.getOutputTensor(0).numElements() != 360) result = false;
+        if(interpreter.getOutputTensor(0).quantizationParams().getZeroPoint() != 0) result = false;
+        if(interpreter.getOutputTensor(0).quantizationParams().getScale() != 0.0f) result = false;
+
+        return result;
+    }
+
+    @Test
+    public void loadedModelIsCrepeModel() {
+        Interpreter interpreter;
+        Interpreter.Options interpreterOptions = new Interpreter.Options();
+        interpreterOptions.setNumThreads(1);
+        try {
+            interpreter = new Interpreter(loadCrepeModelFile(),interpreterOptions);
+            assertNotNull(interpreter);
+            assert isCrepeModelLoaded(interpreter);
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    public void runInterpreterWithCrepeModelFile() {
+        Interpreter interpreter;
+        Interpreter.Options interpreterOptions = new Interpreter.Options();
+        interpreterOptions.setNumThreads(1);
+        try {
+            interpreter = new Interpreter(loadCrepeModelFile(),interpreterOptions);
+
+            int inputTensorIndex = 0;
+            DataType inputDataType = interpreter.getInputTensor(inputTensorIndex).dataType();
+
+            HashMap<Integer, Object> outputProbabilityBuffers = new HashMap<>();
+            ByteBuffer x;
+            for (int i = 0; i < interpreter.getOutputTensorCount(); i++) {
+                DataType OutputDataType = interpreter.getOutputTensor(i).dataType();
+                int[] OutputShape = interpreter.getOutputTensor(0).shape();
+                x = TensorBuffer.createFixedSize(OutputShape, OutputDataType).getBuffer();
+                outputProbabilityBuffers.put(i, x);
+                System.out.println("Created output buffer of " + x.limit() + " bytes for tensor at index " + i +".");
+            }
+
+            System.out.println("Created a tflite output of " + outputProbabilityBuffers.size() + " output tensors.");
+
+            Object[][] inputs = { loadFloatArrayForModel() };
+            interpreter.runForMultipleInputsOutputs(inputs,outputProbabilityBuffers);
+            ByteBuffer p = (ByteBuffer) outputProbabilityBuffers.get(0);
+            p.rewind();
+            System.out.println("pitches...");
+            float[] rawActivation = new float[360];
+            int i = 0;
+            while (p.remaining() > 0 && i < rawActivation.length) {
+                float currentFloat = p.getFloat();
+                System.out.println("buffer position: " + p.position()/4 + " value : " + currentFloat + " i " + i);
+                rawActivation[i] = currentFloat;
+                i++;
+            }
+            float detectedPitch = crepePitchBin2Hz(rawActivation);
+            System.out.println("Detected pitch " + detectedPitch);
+
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private float crepePitchBin2Hz(final float[] rawActivation ) {
+//        frequency = 10 * 2 ** (cents / 1200)
+        float cents = toLocalAverageCents(rawActivation);
+        System.out.println("Detected cents " + cents);
+        return (float) (10 * Math.pow(2,(cents / 1200)));
+    }
+
+    private float[] createCentsMapping() {
+//        np.linspace(0, 7180, 360) + 1997.3794084376191)
+        float[] result = new float[360];
+
+        for(int i =  0; i < result.length; i++) {
+            result[i] = (i * (7180.0f / 360.0f)) + 1997.3794084376191f;
+            System.out.println("Cents mapping " + i + " " + result[i]);
+        }
+
+        return result;
+    }
+
+    private float arraySum(final float[] array) {
+        assertNotNull(array);
+        float result = 0.0f;
+        for(int i = 0; i < array.length; i++) {
+            result += array[i];
+        }
+        System.out.println("Array Sum " + result);
+        return result;
+    }
+
+    private float[] arrayProduct(final float[] arrayLeft, final float[] arrayRight) {
+        assertNotNull(arrayLeft);
+        assertNotNull(arrayRight);
+        assertEquals("Array length must match for arrayProduct",arrayLeft.length, arrayRight.length);
+        float[] result = new float[arrayLeft.length];
+        for(int i = 0; i < arrayLeft.length; i++) {
+            result[i] = arrayLeft[i] * arrayRight[i];
+        }
+        return result;
+    }
+
+    private float toLocalAverageCents(final float[] rawActivation) {
+//        product_sum = np.sum(
+//                salience * to_local_average_cents.cents_mapping[start:end])
+        float productSum = arraySum(arrayProduct(rawActivation,createCentsMapping()));
+//        weight_sum = np.sum(salience)
+        float weightSum = arraySum(rawActivation);
+//        return product_sum / weight_sum
+        return productSum / weightSum;
+    }
+
 }

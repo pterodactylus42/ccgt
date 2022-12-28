@@ -58,6 +58,7 @@ public class SpectrogramView extends View {
     }
 
     private int frequencyToBin(final double frequency, Canvas canvas) {
+        // todo: get this from settings class
         final double minFrequency = 20; // Hz
         final double maxFrequency = 4000;
         int bin = 0;
