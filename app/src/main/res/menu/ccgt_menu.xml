@@ -13,8 +13,8 @@
         android:title="MPM"
         app:showAsAction="never"/>
 
-    <item android:id="@+id/spice"
-        android:title="Spice"
+    <item android:id="@+id/crepe"
+        android:title="Crepe"
         app:showAsAction="never"/>
 
 </menu>

@@ -33,11 +33,10 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.filters.HighPass;
 import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
+import be.tarsos.dsp.pitch.Crepe;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
-import be.tarsos.dsp.pitch.PitchDetector;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
-import be.tarsos.dsp.pitch.Spice;
 import be.tarsos.dsp.util.fft.FFT;
 
 
@@ -75,11 +74,8 @@ import be.tarsos.dsp.util.fft.FFT;
 public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
-    private static final String SPICE_MODEL = "SpiceModel.tflite";
-    // not supported yet :-¡
-    // private static final String CREPE_MODEL = "CrepeModel.tflite";
-
-
+    private static final String CREPE_MODEL = "CrepeModel.tflite";
+    
     private AudioDispatcher dispatcher;
     private float pitchInHz = 0;
     private double centsDeviation = 0;
@@ -87,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private final static String[] PITCHCLASS = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
+    // TODO: 30.12.22 choose it via config menu 
     private final static int SLOPPY_DISPLAY = 366;
     private final static int SPEEDY_DISPLAY = 255;
 
@@ -174,8 +171,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private MappedByteBuffer loadSpiceModelFile() throws IOException {
-        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd(SPICE_MODEL);
+    private MappedByteBuffer loadModelFile(final String modelFile) throws IOException {
+        AssetFileDescriptor fileDescriptor = getBaseContext().getAssets().openFd(modelFile);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
@@ -208,17 +205,17 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchEstimationAlgorithm.MPM);
                 Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.spice:
+            case R.id.crepe:
                 stopAudio();
-                startAudio(PitchEstimationAlgorithm.SPICE);
-                Toast.makeText(this, "Spice selected", Toast.LENGTH_SHORT).show();
+                startAudio(PitchEstimationAlgorithm.CREPE);
+                Toast.makeText(this, "Crepe selected", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    private void startAudio(PitchEstimationAlgorithm pitchAlgorithmObject) {
+    private void startAudio(PitchEstimationAlgorithm pitchEstimationAlgorithm) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
 
@@ -263,18 +260,21 @@ public class MainActivity extends AppCompatActivity {
                 public void processingFinished() {
                     Log.d(TAG, "processingFinished: fftProcessor");
                 }
+
             };
 
             synchronized (this) {
-                AudioProcessor audioProcessor = new PitchProcessor(pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
-                if(pitchAlgorithmObject.equals(PitchEstimationAlgorithm.SPICE)) {
-                    Spice detector = (Spice)((PitchProcessor) audioProcessor).getDetector();
+                AudioProcessor audioProcessor = new PitchProcessor(pitchEstimationAlgorithm, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+                if(pitchEstimationAlgorithm.equals(PitchEstimationAlgorithm.CREPE)) {
+                    Crepe detector = (Crepe) audioProcessor.getDetector();
                     try {
-                        detector.setSpiceModel(loadSpiceModelFile());
+                        detector.setModel(loadModelFile(CREPE_MODEL));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 } else {
+                    // TODO: 30.12.22 is this really a performance dip?
+                    // maybe show fps on display
                     dispatcher.addAudioProcessor(new LowPassFS(7000, SAMPLERATE));
                     dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
                     dispatcher.addAudioProcessor(fftProcessor);

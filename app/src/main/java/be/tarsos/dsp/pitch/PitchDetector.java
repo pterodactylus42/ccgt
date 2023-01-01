@@ -24,6 +24,8 @@
 
 package be.tarsos.dsp.pitch;
 
+import java.nio.MappedByteBuffer;
+
 /**
  * A pitch detector is capable of analyzing a buffer with audio information
  * and return a pitch estimation in Hz.
@@ -43,4 +45,10 @@ public interface PitchDetector {
 	 *         present in the buffer.
 	 */
 	PitchDetectionResult getPitch(final float[] audioBuffer);
+
+	default void setModel(MappedByteBuffer model) {
+		/*
+		* only for ml detectors
+		*/
+	}
 }

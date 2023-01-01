@@ -24,6 +24,8 @@
 
 package be.tarsos.dsp;
 
+import be.tarsos.dsp.pitch.PitchDetector;
+
 /**
  * <p>
  * AudioProcessors are responsible for actual digital signal processing. The
@@ -56,4 +58,9 @@ public interface AudioProcessor {
      * has finished. Can be used to deallocate resources or cleanup.
      */
     void processingFinished();
+
+	default PitchDetector getDetector() {
+		return null;
+	}
+
 }

@@ -79,12 +79,12 @@ public class PitchProcessor implements AudioProcessor {
 		 */
 		AMDF,
 		/**
-		 * A pitch extractor that is built around google's Spice-Model.
+		 * A pitch extractor that was trained on several datasets of
+		 * pitched sounds.
 		 * You have to load the model from somewhere and pass it to the
 		 * constructor as a MappedByteBuffer.
-		 * The model only accepts Samplerate 16000 and Buffersize 1024.
 		 */
-		SPICE;
+		CREPE;
 
 		/**
 		 * Returns a new instance of a pitch detector object based on the provided values.
@@ -104,8 +104,8 @@ public class PitchProcessor implements AudioProcessor {
 				detector = new AMDF(sampleRate, bufferSize);
 			} else if (this == FFT_PITCH){
 				detector = new FFTPitch(Math.round(sampleRate),bufferSize);
-			} else if (this == SPICE) {
-				detector = new Spice(sampleRate,bufferSize);
+			} else if (this == CREPE) {
+				detector = new Crepe(sampleRate,bufferSize);
 			} else {
 				detector = new Yin(sampleRate, bufferSize);
 			}
@@ -139,6 +139,7 @@ public class PitchProcessor implements AudioProcessor {
 		this.handler = handler;	
 	}
 
+	@Override
 	public PitchDetector getDetector() {
 		return detector;
 	}
@@ -158,5 +159,4 @@ public class PitchProcessor implements AudioProcessor {
 	public void processingFinished() {
 	}
 
-	
 }
