@@ -1,0 +1,59 @@
+<resources>
+
+    <string-array name="algorithm_entries">
+        <item>Yin</item>
+        <item>Yin FFT</item>
+        <item>MPM</item>
+    </string-array>
+    <string-array name="algorithm_values">
+        <item>yin</item>
+        <item>yinfft</item>
+        <item>mpm</item>
+    </string-array>
+
+    <string-array name="calibration_entries">
+        <item>437</item>
+        <item>438</item>
+        <item>439</item>
+        <item>440</item>
+        <item>441</item>
+        <item>442</item>
+        <item>443</item>
+    </string-array>
+    <string-array name="calibration_values">
+        <item>437</item>
+        <item>438</item>
+        <item>439</item>
+        <item>440</item>
+        <item>441</item>
+        <item>442</item>
+        <item>443</item>
+    </string-array>
+
+    <string-array name="samplerate_entries">
+        <item>8000</item>
+        <item>11025</item>
+        <item>22050</item>
+        <item>44100</item>
+    </string-array>
+    <string-array name="samplerate_values">
+        <item>8000</item>
+        <item>11025</item>
+        <item>22050</item>
+        <item>44100</item>
+    </string-array>
+
+    <string-array name="buffersize_entries">
+        <item>1024</item>
+        <item>2048</item>
+        <item>4096</item>
+        <item>8192</item>
+    </string-array>
+    <string-array name="buffersize_values">
+        <item>1024</item>
+        <item>2048</item>
+        <item>4096</item>
+        <item>8192</item>
+    </string-array>
+
+</resources>

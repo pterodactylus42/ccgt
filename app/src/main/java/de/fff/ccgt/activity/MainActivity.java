@@ -1,10 +1,8 @@
-package de.fff.ccgt;
+package de.fff.ccgt.activity;
 
-import android.content.Context;
-import android.content.pm.ActivityInfo;
+import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,25 +32,12 @@ import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
+import de.fff.ccgt.R;
+import de.fff.ccgt.view.SpectrogramView;
 
 
 /*
  * ccgt -  concole curses guitar tuner
- *                _
- *   ___ ___ __ _| |_
- *  / __/ __/ _` | __|
- * | (_| (_| (_| | |_
- *  \___\___\__, |\__|
- *          |___/
- *
- * just get in tune, don't buy premium
- *
- *
- * big thanks to joren six, olmo cornelis and marc leman ...
- * and the community! this project uses the mighty pitch
- * tracking algorithms from tarsos dsp and its spectrogram
- * capability.
- *
  *
  * JorenSix/TarsosDSP is licensed under the
  * GNU General Public License v3.0
@@ -63,7 +48,6 @@ import be.tarsos.dsp.util.fft.FFT;
  * under the same license. Copyright and license
  * notices must be preserved. Contributors provide
  * an express grant of patent rights.
- *
  */
 
 
@@ -77,22 +61,22 @@ public class MainActivity extends AppCompatActivity {
     private float pitchInHz = 0;
     private double centsDeviation = 0;
 
-    private final static String PITCHCLASS[] = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
+    private final static String[] PITCHCLASSES = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
-    //audio config values
-    // todo: put this in separate settings class
     private double referenceFrequency = 440.0;
+    // todo: use values from preferences
     private final static int SAMPLERATE = 8000;
     private final static int BUFFERSIZE = 2048;
+    // TODO: 27.07.24 put overlap into audio handler
     private final static int OVERLAP = (BUFFERSIZE/4)*3;
 
-    private TextView console, note;
+    private TextView consoleTV;
     private SpectrogramView spectrogramView;
     private AudioProcessor fftProcessor;
-    private TextView text, oct, freq;
-    private Spinner spinner;
-    private SeekBar seekBar;
+    private TextView pitchNameTV, octTV, freqTV;
+    private Spinner calibSpinner;
+    private SeekBar calibSeekBar;
 
     private Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
@@ -110,20 +94,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        getSupportActionBar().setTitle(" :~$ ccgt");
+        getSupportActionBar().setTitle(R.string.title_action_bar);
 
         spectrogramView = findViewById(R.id.spectrogram);
-        text = (TextView) findViewById(R.id.note);
-        oct = (TextView) findViewById(R.id.octave);
-        freq = (TextView) findViewById(R.id.freq);
-        spinner = (Spinner) findViewById(R.id.spinner);
-        seekBar = (SeekBar) findViewById(R.id.calibrationSeekBar);
+        pitchNameTV = (TextView) findViewById(R.id.note);
+        octTV = (TextView) findViewById(R.id.octave);
+        freqTV = (TextView) findViewById(R.id.freq);
+        calibSpinner = (Spinner) findViewById(R.id.spinner);
+        calibSeekBar = (SeekBar) findViewById(R.id.calibrationSeekBar);
         // set initial values
-        spinner.setSelection(3);
-        seekBar.setProgress(3);
-        seekBar.setOnSeekBarChangeListener(
+        calibSpinner.setSelection(3);
+        calibSeekBar.setProgress(3);
+        calibSeekBar.setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     int progress = 0;
 
@@ -131,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onProgressChanged(SeekBar seekBar,
                                                   int progressValue, boolean fromUser) {
                         progress = progressValue;
-                        spinner.setSelection(progress);
+                        calibSpinner.setSelection(progress);
                         referenceFrequency = REFERENCE_FREQUENCIES[progress];
                     }
 
@@ -144,14 +127,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        spinner.setOnItemSelectedListener(
+        calibSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
                     int selection = 0;
 
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                         selection = position;
-                        seekBar.setProgress(selection);
+                        calibSeekBar.setProgress(selection);
                         referenceFrequency = REFERENCE_FREQUENCIES[selection];
                     }
 
@@ -162,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         initRowHistory();
+        // TODO: 02.07.24 use Algorithm from preferences
         startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
         startDisplay();
 
@@ -192,13 +176,15 @@ public class MainActivity extends AppCompatActivity {
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM);
                 Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
                 return true;
+            case R.id.settings:
+                startActivity(new Intent(this,SettingsActivity.class));
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
     // call this in OnCreate if you want to test:
-    public void getValidSampleRates() {
+    private void getValidSampleRates() {
         for(int rate : new int[] {8000, 11025, 16000, 22050, 44100, 48000, 96000}) {
             //Returns: ERROR_BAD_VALUE if the recording parameters are not supported by the hardware, [...]
             int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
@@ -208,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // TODO: 02.07.24 create singleton Audio handler 
     private void startAudio(Object pitchAlgorithmObject) {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
@@ -221,15 +208,15 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             if(pitchDetectionResult.isPitched()) {
                                 //make it fade from deep red to green
-                                text.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
-                                text.setText(getNearestPitchClass(pitchInHz));
+                                pitchNameTV.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                                pitchNameTV.setText(getNearestPitchClass(pitchInHz));
                             } else {
                                 getNearestPitchClass(pitchInHz);
-                                text.setTextColor(Color.WHITE);
-                                text.setText("-");
+                                pitchNameTV.setTextColor(Color.WHITE);
+                                pitchNameTV.setText("-");
                             }
-                            oct.setText(getOctave(pitchInHz));
-                            freq.setText(String.format("%.02f", pitchInHz));
+                            octTV.setText(getOctave(pitchInHz));
+                            freqTV.setText(String.format("%.02f", pitchInHz));
                         }
                     });
                 }
@@ -260,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void processingFinished() {
-                    Log.d(TAG, "processingFinished: fftProcessor");
+//                    Log.d(TAG, "processingFinished: fftProcessor");
                 }
             };
 
@@ -270,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
                 audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
                 dispatcher.addAudioProcessor(fftProcessor);
-                new Thread(dispatcher, "Audio Dispatcher").start();
+                new Thread(dispatcher, "Audio Dispatcher adding new processors").start();
             }
         }
     }
@@ -297,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
                             displayHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    console = findViewById(R.id.console);
+                                    consoleTV = findViewById(R.id.console);
                                     String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
                                     putCentsToHistory(centsString);
                                     StringBuffer output = new StringBuffer();
@@ -307,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
                                         output.append(rowHistory[i]);
                                         output.append("\n");
                                     }
-                                    console.setText(output);
+                                    consoleTV.setText(output);
                                 }
                             });
                         Thread.sleep(255);
@@ -446,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        return PITCHCLASS[integerDistance%12];
+        return PITCHCLASSES[integerDistance%12];
     }
 
     protected double log2(double value) {

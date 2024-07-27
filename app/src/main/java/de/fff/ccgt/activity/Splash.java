@@ -1,9 +1,8 @@
 
-package de.fff.ccgt;
+package de.fff.ccgt.activity;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +14,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import static android.util.Log.d;
+
+import de.fff.ccgt.R;
+import de.fff.ccgt.activity.MainActivity;
 
 public class Splash extends AppCompatActivity {
 
@@ -42,7 +44,7 @@ public class Splash extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        getSupportActionBar().setTitle(R.string.title_splash_screen);
+        getSupportActionBar().setTitle(R.string.title_action_bar);
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1234);
@@ -59,7 +61,7 @@ public class Splash extends AppCompatActivity {
             @Override
             public void run() {
                 currentString = currentString + intro[currentStringNum] + "\n";
-                textView.setText(currentString);;
+                textView.setText(currentString);
                 currentStringNum++;
                 if(currentStringNum < intro.length) {
                     appendText();
@@ -69,7 +71,7 @@ public class Splash extends AppCompatActivity {
                 }
 
             }
-        }, 100);
+        }, 50);
     }
 
     @Override
@@ -77,9 +79,7 @@ public class Splash extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1234: {
-                //If request is cancelled, result arrays are empty
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //ready to rumble
                     textView = findViewById(R.id.introTextView);
                     appendText();
                 } else {

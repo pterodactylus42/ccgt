@@ -1,6 +1,19 @@
 <resources>
+    <!-- General App strings -->
     <string name="app_name">ccgt</string>
-    <string name="title_splash_screen">:~$ </string>
+    <string name="title_action_bar"> •-&lt;==== </string>
     <string name="hertz_string">Hz</string>
     <string name="choose">...</string>
+    <!-- Settings strings -->
+    <string name="title_activity_settings">Settings</string>
+    <string name="algorithm_header">Pitch detection</string>
+    <string name="algorithm_title">Algorithm</string>
+    <string name="calibration_header">Calibration</string>
+    <string name="calibration_title">Frequency</string>
+    <string name="display_header">Display</string>
+    <string name="display_title">Slow speed</string>
+    <string name="audio_header">Audio Settings</string>
+    <string name="audio_samplerate_title">Samplerate</string>
+    <string name="audio_buffersize_title">Buffersize</string>
+    <string name="splash_title">Splash screen</string>
 </resources>

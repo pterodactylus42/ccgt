@@ -1,0 +1,49 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/algorithm_header">
+        <ListPreference
+            app:defaultValue="yin"
+            app:entries="@array/algorithm_entries"
+            app:entryValues="@array/algorithm_values"
+            app:key="algorithm"
+            app:title="@string/algorithm_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/calibration_header">
+        <ListPreference
+            app:defaultValue="440"
+            app:entries="@array/calibration_entries"
+            app:entryValues="@array/calibration_values"
+            app:key="calibration"
+            app:title="@string/calibration_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/audio_header">
+        <ListPreference
+            app:defaultValue="8000"
+            app:entries="@array/samplerate_entries"
+            app:entryValues="@array/samplerate_values"
+            app:key="samplerate"
+            app:title="@string/audio_samplerate_title"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            app:defaultValue="2048"
+            app:entries="@array/buffersize_entries"
+            app:entryValues="@array/buffersize_values"
+            app:key="buffersize"
+            app:title="@string/audio_buffersize_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/display_header">
+        <SwitchPreferenceCompat
+            app:key="slow"
+            app:title="@string/display_title" />
+        <SwitchPreferenceCompat
+            app:key="splash"
+            app:title="@string/splash_title" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,4 +1,4 @@
-package de.fff.ccgt;
+package de.fff.ccgt.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -62,6 +62,7 @@ public class SpectrogramView extends View {
         final double maxFrequency = 4000;
         int bin = 0;
         final boolean logarithmic = true;
+        // todo fetch logarithmic from settings
         if(frequency != 0 && frequency > minFrequency && frequency < maxFrequency) {
             double binEstimate = 0;
             if(logarithmic) {
@@ -118,8 +119,6 @@ public class SpectrogramView extends View {
             }
 
             pixelPaint.setColor(Color.BLACK);
-
-            invalidate();
 
             // fixed position
             position = getHeight() / 2;

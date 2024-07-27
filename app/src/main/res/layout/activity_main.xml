@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/black"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".activity.MainActivity">
 
     <TextView
         android:id="@+id/console"
@@ -54,7 +54,7 @@
         app:layout_constraintStart_toEndOf="@+id/note"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <de.fff.ccgt.SpectrogramView
+    <de.fff.ccgt.view.SpectrogramView
         android:id="@+id/spectrogram"
         android:layout_width="0dp"
         android:layout_height="0dp"
