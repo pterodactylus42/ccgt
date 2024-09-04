@@ -1,5 +1,6 @@
 package de.fff.ccgt.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioFormat;
@@ -21,6 +22,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import java.util.Arrays;
+import java.util.Objects;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -56,8 +59,6 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private AudioDispatcher dispatcher;
-    private PitchDetectionHandler pitchDetectionHandler;
-    private AudioProcessor audioProcessor;
     private float pitchInHz = 0;
     private double centsDeviation = 0;
 
@@ -73,19 +74,16 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView consoleTV;
     private SpectrogramView spectrogramView;
-    private AudioProcessor fftProcessor;
     private TextView pitchNameTV, octTV, freqTV;
     private Spinner calibSpinner;
     private SeekBar calibSeekBar;
 
-    private Handler displayHandler = new Handler();
+    private final Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
 
-    private final static int UPDATE_TUNER_VALUES = 1;
     private final static int ROWS = 20;
-    private final static int COLS = 41;
 
-    private String[] rowHistory = new String[ROWS];
+    private final String[] rowHistory = new String[ROWS];
     private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
 
     private double tunerLastCentsValue = 0;
@@ -95,14 +93,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getSupportActionBar().setTitle(R.string.title_action_bar);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.title_action_bar);
 
         spectrogramView = findViewById(R.id.spectrogram);
-        pitchNameTV = (TextView) findViewById(R.id.note);
-        octTV = (TextView) findViewById(R.id.octave);
-        freqTV = (TextView) findViewById(R.id.freq);
-        calibSpinner = (Spinner) findViewById(R.id.spinner);
-        calibSeekBar = (SeekBar) findViewById(R.id.calibrationSeekBar);
+        pitchNameTV = findViewById(R.id.note);
+        octTV = findViewById(R.id.octave);
+        freqTV = findViewById(R.id.freq);
+        calibSpinner = findViewById(R.id.spinner);
+        calibSeekBar = findViewById(R.id.calibrationSeekBar);
         // set initial values
         calibSpinner.setSelection(3);
         calibSeekBar.setProgress(3);
@@ -199,48 +197,41 @@ public class MainActivity extends AppCompatActivity {
         if(dispatcher == null) {
             dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
 
-            pitchDetectionHandler = new PitchDetectionHandler() {
-                @Override
-                public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
-                    pitchInHz = pitchDetectionResult.getPitch();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(pitchDetectionResult.isPitched()) {
-                                //make it fade from deep red to green
-                                pitchNameTV.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
-                                pitchNameTV.setText(getNearestPitchClass(pitchInHz));
-                            } else {
-                                getNearestPitchClass(pitchInHz);
-                                pitchNameTV.setTextColor(Color.WHITE);
-                                pitchNameTV.setText("-");
-                            }
-                            octTV.setText(getOctave(pitchInHz));
-                            freqTV.setText(String.format("%.02f", pitchInHz));
-                        }
-                    });
-                }
+            //make it fade from deep red to green
+            @SuppressLint("DefaultLocale") PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
+                pitchInHz = pitchDetectionResult.getPitch();
+                runOnUiThread(() -> {
+                    if (pitchDetectionResult.isPitched()) {
+                        //make it fade from deep red to green
+                        pitchNameTV.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
+                        pitchNameTV.setText(getNearestPitchClass(pitchInHz));
+                    } else {
+                        getNearestPitchClass(pitchInHz);
+                        pitchNameTV.setTextColor(Color.WHITE);
+                        pitchNameTV.setText("-");
+                    } // TODO: 04.09.24 make oct and freq show up again
+                    octTV.setText(getOctave(pitchInHz));
+                    freqTV.setText(String.format("%.02f", pitchInHz));
+                });
             };
 
-            fftProcessor = new AudioProcessor() {
+            //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
+            AudioProcessor fftProcessor = new AudioProcessor() {
 
-                FFT fft = new FFT(BUFFERSIZE);
-                float[] amplitudes = new float[BUFFERSIZE * 2];
+                final FFT fft = new FFT(BUFFERSIZE);
+                final float[] amplitudes = new float[BUFFERSIZE * 2];
 
                 @Override
                 public boolean process(AudioEvent audioEvent) {
                     float[] audioFloatBuffer = audioEvent.getFloatBuffer();
                     float[] transformBuffer = new float[BUFFERSIZE * 4];
-                    System.arraycopy(audioFloatBuffer, 0 , transformBuffer, 0, audioFloatBuffer.length);
+                    System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
                     fft.forwardTransform(transformBuffer);
                     //modulus ... absolute value of complex fourier coefficient ... aka magnitude:
                     fft.modulus(transformBuffer, amplitudes);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
-                            spectrogramView.invalidate();
-                        }
+                    runOnUiThread(() -> {
+                        spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
+                        spectrogramView.invalidate();
                     });
                     return true;
                 }
@@ -254,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
             synchronized (this) {
                 dispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
                 dispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
-                audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+                AudioProcessor audioProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithmObject, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
                 dispatcher.addAudioProcessor(audioProcessor);
                 dispatcher.addAudioProcessor(fftProcessor);
                 new Thread(dispatcher, "Audio Dispatcher adding new processors").start();
@@ -276,31 +267,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void startDisplay() {
 
-        displayUpdateThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                            displayHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    consoleTV = findViewById(R.id.console);
-                                    String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
-                                    putCentsToHistory(centsString);
-                                    StringBuffer output = new StringBuffer();
-                                    output.append(firstLine);
-                                    output.append("\n");
-                                    for(int i = 0; i < rowHistory.length; i++) {
-                                        output.append(rowHistory[i]);
-                                        output.append("\n");
-                                    }
-                                    consoleTV.setText(output);
-                                }
-                            });
-                        Thread.sleep(255);
-                    } catch (InterruptedException e) {
-                        //e.printStackTrace();
-                    }
+        displayUpdateThread = new Thread(() -> {
+            while (true) {
+                try {
+                        displayHandler.post(() -> {
+                            consoleTV = findViewById(R.id.console);
+                            String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
+                            putCentsToHistory(centsString);
+                            StringBuffer output = new StringBuffer();
+                            output.append(firstLine);
+                            output.append("\n");
+                            for (String s : rowHistory) {
+                                output.append(s);
+                                output.append("\n");
+                            }
+                            consoleTV.setText(output);
+                        });
+                    Thread.sleep(255);
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
                 }
             }
         });
@@ -309,16 +294,13 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void putCentsToHistory(String centsString){
-        for(int i = rowHistory.length-1; i > 0; i--) {
-            rowHistory[i] = rowHistory[i-1];
-        }
+        if (rowHistory.length - 1 >= 0)
+            System.arraycopy(rowHistory, 0, rowHistory, 1, rowHistory.length - 1);
         rowHistory[0] = centsString;
     }
 
     private void initRowHistory(){
-        for(int i = 0; i < rowHistory.length; i++) {
-            rowHistory[i] = "";
-        }
+        Arrays.fill(rowHistory, "");
     }
 
     private String getHistoryRow(double cents) {
@@ -398,7 +380,6 @@ public class MainActivity extends AppCompatActivity {
 
         int integerDistance = (int) distance;
 
-        double realDistanceError = distance - integerDistance;
         double distanceError = Math.abs(distance - integerDistance);
 
         /*

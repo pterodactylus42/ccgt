@@ -38,11 +38,6 @@ public class SpectrogramView extends View {
         init();
     }
 
-    public SpectrogramView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
-    }
-
     private void init() {
         pixelPaint = new Paint();
         pixelPaint.setColor(Color.GRAY);
@@ -62,9 +57,9 @@ public class SpectrogramView extends View {
         final double maxFrequency = 4000;
         int bin = 0;
         final boolean logarithmic = true;
-        // todo fetch logarithmic from settings
+        // todo fetch logarithmic from preferences
         if(frequency != 0 && frequency > minFrequency && frequency < maxFrequency) {
-            double binEstimate = 0;
+            double binEstimate;
             if(logarithmic) {
                 final double minCent = PitchConverter.hertzToAbsoluteCent(minFrequency);
                 final double maxCent = PitchConverter.hertzToAbsoluteCent(maxFrequency);
@@ -77,8 +72,8 @@ public class SpectrogramView extends View {
                 Log.d(TAG, "frequencyToBin: binEstimate exceeds view width: " + binEstimate);
             }
             bin = canvas.getWidth() - 1 - (int) binEstimate;
+            // if you prefer the other direction:
             // bin = (int) binEstimate - 1;
-            // if you prefer the other direction ....
         }
         return bin;
     }
@@ -89,7 +84,7 @@ public class SpectrogramView extends View {
         if(amplitudes != null) {
             double maxAmplitude = 0;
             //for every pixel - in width of view - calculate an amplitude
-            float[] pixeledAmplitudes = new float[canvas.getWidth()];
+            float[] pixeledAmplitudes = new float[getWidth()];
 
             //iterate the frequency magnitudes array and map to pixels
             for(int i = 0; i < amplitudes.length; i++) {

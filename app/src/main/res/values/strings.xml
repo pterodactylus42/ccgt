@@ -12,8 +12,10 @@
     <string name="calibration_title">Frequency</string>
     <string name="display_header">Display</string>
     <string name="display_title">Slow speed</string>
-    <string name="audio_header">Audio Settings</string>
+    <string name="audio_header">Audio settings</string>
     <string name="audio_samplerate_title">Samplerate</string>
     <string name="audio_buffersize_title">Buffersize</string>
     <string name="splash_title">Splash screen</string>
+    <string name="spectrogram_title">Logarithmic spectrogram</string>
+    <string name="octave_title">Show octave</string>
 </resources>

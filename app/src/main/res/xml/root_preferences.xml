@@ -44,6 +44,12 @@
         <SwitchPreferenceCompat
             app:key="splash"
             app:title="@string/splash_title" />
+        <SwitchPreferenceCompat
+            app:key="logspectrogram"
+            app:title="@string/spectrogram_title" />
+        <SwitchPreferenceCompat
+            app:key="showoctave"
+            app:title="@string/octave_title" />
     </PreferenceCategory>
 
 </PreferenceScreen>
