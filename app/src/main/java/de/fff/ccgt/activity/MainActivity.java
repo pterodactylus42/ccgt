@@ -29,6 +29,7 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
+import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.view.SpectrogramView;
 
 
@@ -52,11 +53,11 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private AudioService audioService;
+    private PitchService pitchService;
 
     private float pitchInHz = 0;
     private double centsDeviation = 0;
 
-    private final static String[] PITCHCLASSES = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
 
     private double referenceFrequency = 440.0;
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         audioService = new AudioService();
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+
+        pitchService = new PitchService();
 
         startDisplay();
 
@@ -250,90 +253,7 @@ public class MainActivity extends AppCompatActivity {
         return output;
     }
 
-    private String getOctave(double freq) {
-        double distance;
-        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
-        return Integer.toString((int) ((distance / 12) + 4));
-    }
 
-    private int distanceError(double freq) {
-        // returns semitone distance error to be used as argument for color
-        // caution, in the process of tuning you get values just below 1...
-        // and values just above 0 !
-        double distance;
-        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
-        // now we have the semitone distance from middle c ...
-        // split into whole and broken semitones
-        int integerDistance = (int) distance;
-        double distanceError = Math.abs(distance - integerDistance);
-        // return value big enough for color generation
-        if(distanceError < 0.5) {
-            return (int) (250 * distanceError);
-        } else {
-            return (int) (250 * (1 - distanceError));
-        }
-    }
-
-    private String getNearestPitchClass(double freq) {
-        /*
-            calculate semitone distance from middle c
-            which has approx. 261.6256 Hz
-            distance = 9 + (12 log2 (freq / referenceFreq))
-
-            zero means, the note is middle c :-)
-
-            referenceFreq is 440 hz initially
-            configurable via slider
-
-            distance will be a double, where the part behind the
-            decimal point (period) represents distance from the pitch class
-         */
-
-        double distance;
-        distance = 9 + (12 * (log2(freq/referenceFrequency)  ) );
-
-        int integerDistance = (int) distance;
-
-        double distanceError = Math.abs(distance - integerDistance);
-
-        /*
-            choose the pitch that is nearest and
-            return its name
-            set deviation from the frequency
-
-            for positive values of integerDistance
-                deviation up to 0.5 is displayed in positive direction
-                higher deviation is displayed from the next int in negative direction
-            for negative values of integerDistance
-                deviation up to 0.5 is displayed in negative direction
-                higher deviation is displayed from the next int in positive direction
-         */
-
-        if(integerDistance > 0) {
-            if(distanceError > 0.5 || distanceError == 0.5) {
-                integerDistance++;
-                centsDeviation = (distanceError-1) * 100;
-            } else {
-                centsDeviation = distanceError * 100;
-            }
-        } else {
-            if(distanceError > 0.5 || distanceError == 0.5) {
-                integerDistance--;
-                centsDeviation = (1-distanceError) * 100;
-            } else {
-                centsDeviation = -(distanceError * 100);
-            }
-            if(integerDistance<12) {
-                integerDistance = (integerDistance%12)+12;
-            }
-        }
-
-        return PITCHCLASSES[integerDistance%12];
-    }
-
-    protected double log2(double value) {
-        return Math.log( value ) / Math.log( 2.0 );
-    }
 
     @Override
     protected void onPause() {
@@ -362,14 +282,17 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (pitchDetectionResult.isPitched()) {
                     //make it fade from deep red to green
-                    pitchNameTV.setTextColor(Color.rgb(distanceError(pitchInHz), 250 - distanceError(pitchInHz), distanceError(pitchInHz)));
-                    pitchNameTV.setText(getNearestPitchClass(pitchInHz));
+                    int octetValue = pitchService.distanceErrorOctetValue(pitchInHz, referenceFrequency);
+                    pitchNameTV.setTextColor(Color.rgb(octetValue, 250 - octetValue, octetValue));
+                    pitchNameTV.setText(pitchService.getNearestPitchClass(pitchInHz, referenceFrequency));
+                    centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
                 } else {
-                    getNearestPitchClass(pitchInHz);
+                    pitchService.getNearestPitchClass(pitchInHz, referenceFrequency);
+                    centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
                     pitchNameTV.setTextColor(Color.WHITE);
                     pitchNameTV.setText("-");
                 }
-                octTV.setText(getOctave(pitchInHz));
+                octTV.setText(pitchService.getOctave(pitchInHz, referenceFrequency));
                 freqTV.setText(String.format("%.02f", pitchInHz));
             });
         };
@@ -379,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
 
     public AudioProcessor getFftProcessor() {
         AudioProcessor fftProcessor = new AudioProcessor() {
-            // TODO: 04.10.24 get constants from PreferencesService
+            // TODO: 04.10.24 get BUFFERSIZE from PreferencesService
             final FFT fft = new FFT(AudioService.BUFFERSIZE);
             final float[] amplitudes = new float[AudioService.BUFFERSIZE * 2];
 
