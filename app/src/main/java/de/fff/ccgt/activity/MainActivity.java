@@ -436,8 +436,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        displayUpdateThread.interrupt();
-        dispatcher.stop();
+        if(displayUpdateThread != null) {
+            displayUpdateThread.interrupt();
+        }
+        if(dispatcher != null) {
+            dispatcher.stop();
+        }
     }
 
 }
