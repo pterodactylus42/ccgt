@@ -40,7 +40,7 @@ import de.fff.ccgt.view.SpectrogramView;
 
 
 /*
- * ccgt -  concole curses guitar tuner
+ * ccgt -  console curses guitar tuner
  *
  * JorenSix/TarsosDSP is licensed under the
  * GNU General Public License v3.0
@@ -98,10 +98,13 @@ public class MainActivity extends AppCompatActivity {
         spectrogramView = findViewById(R.id.spectrogram);
         pitchNameTV = findViewById(R.id.note);
         octTV = findViewById(R.id.octave);
+        octTV.setTextColor(Color.WHITE);
         freqTV = findViewById(R.id.freq);
+        freqTV.setTextColor(Color.WHITE);
         calibSpinner = findViewById(R.id.spinner);
+        calibSpinner.setBackgroundColor(Color.DKGRAY);
         calibSeekBar = findViewById(R.id.calibrationSeekBar);
-        // set initial values
+
         calibSpinner.setSelection(3);
         calibSeekBar.setProgress(3);
         calibSeekBar.setOnSeekBarChangeListener(
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.yin:
+            case R.id.yin: // TODO: 04.10.24 get these values from settings
                 stopAudio();
                 startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN);
                 Toast.makeText(this, "Yin selected", Toast.LENGTH_SHORT).show();
@@ -305,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getHistoryRow(double cents) {
 		int approximateCents = (int) cents;
-		StringBuffer tmpstr = new StringBuffer("                                         \n");
+		StringBuilder tmpstr = new StringBuilder("                                         \n");
 
 		if(cents < -3) {
 			if(cents < -40) {
