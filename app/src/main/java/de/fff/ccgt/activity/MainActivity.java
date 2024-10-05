@@ -29,6 +29,7 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
+import de.fff.ccgt.service.ConsoleService;
 import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.view.SpectrogramView;
 
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     private AudioService audioService;
     private PitchService pitchService;
+    private ConsoleService consoleService;
 
     private float pitchInHz = 0;
     private double centsDeviation = 0;
@@ -62,21 +64,13 @@ public class MainActivity extends AppCompatActivity {
 
     private double referenceFrequency = 440.0;
 
-    private TextView consoleTV;
     private SpectrogramView spectrogramView;
-    private TextView pitchNameTV, octTV, freqTV;
+    private TextView pitchNameTV, octTV, freqTV, consoleTV;
     private Spinner calibSpinner;
     private SeekBar calibSeekBar;
 
     private final Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
-
-    private final static int ROWS = 20;
-
-    private final String[] rowHistory = new String[ROWS];
-    private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
-
-    private double tunerLastCentsValue = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
         freqTV.setTextColor(Color.WHITE);
         calibSpinner = findViewById(R.id.spinner);
         calibSeekBar = findViewById(R.id.calibrationSeekBar);
+        consoleTV = findViewById(R.id.console);
 
         initCalibSpinner();
-        initRowHistory();
 
         audioService = new AudioService();
         audioService.getValidSampleRates();
@@ -103,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
         pitchService = new PitchService();
 
+        consoleService = new ConsoleService();
         startDisplay();
 
     }
@@ -187,19 +182,7 @@ public class MainActivity extends AppCompatActivity {
         displayUpdateThread = new Thread(() -> {
             while (true) {
                 try {
-                        displayHandler.post(() -> {
-                            consoleTV = findViewById(R.id.console);
-                            String centsString = getHistoryRow(twoPointMovingAverageFilter(centsDeviation));
-                            putCentsToHistory(centsString);
-                            StringBuffer output = new StringBuffer();
-                            output.append(firstLine);
-                            output.append("\n");
-                            for (String s : rowHistory) {
-                                output.append(s);
-                                output.append("\n");
-                            }
-                            consoleTV.setText(output);
-                        });
+                    displayHandler.post(getUpdateConsoleRunnable());
                     Thread.sleep(255);
                 } catch (InterruptedException e) {
                     //e.printStackTrace();
@@ -208,52 +191,6 @@ public class MainActivity extends AppCompatActivity {
         });
         displayUpdateThread.start();
     }
-
-
-    private void putCentsToHistory(String centsString){
-        if (rowHistory.length - 1 >= 0)
-            System.arraycopy(rowHistory, 0, rowHistory, 1, rowHistory.length - 1);
-        rowHistory[0] = centsString;
-    }
-
-    private void initRowHistory(){
-        Arrays.fill(rowHistory, "");
-    }
-
-    private String getHistoryRow(double cents) {
-		int approximateCents = (int) cents;
-		StringBuilder tmpstr = new StringBuilder("                                         \n");
-
-		if(cents < -3) {
-			if(cents < -40) {
-				//value is too big, display it at the bottom (left)
-				tmpstr.setCharAt(0, '|');
-			} else {
-				//from middle, go one char to the left per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '>');
-			}
-		} else if (cents > 3) {
-			if(cents > 40) {
-				//value is too big, display it at the top (right)
-                tmpstr.setCharAt(40, '|');
-			} else {
-				//from middle, go one char to the right per 3 cents
-                tmpstr.setCharAt(20+approximateCents/3, '<');
-			}
-
-		} else {
-            tmpstr.setCharAt(20, 'I');
-        }
-		return tmpstr.toString();
-    }
-
-    private double twoPointMovingAverageFilter(double actualCents) {
-        double output = (actualCents + tunerLastCentsValue) / 2;
-        tunerLastCentsValue = actualCents;
-        return output;
-    }
-
-
 
     @Override
     protected void onPause() {
@@ -328,6 +265,13 @@ public class MainActivity extends AppCompatActivity {
         };
 
         return fftProcessor;
+    }
+    private Runnable getUpdateConsoleRunnable() {
+        Runnable updateConsoleRunnable = () -> {
+            consoleTV.setText(consoleService.newConsoleContents(centsDeviation));
+        };
+
+        return updateConsoleRunnable;
     }
 
 }
