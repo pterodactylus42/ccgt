@@ -11,30 +11,35 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import be.tarsos.dsp.util.PitchConverter;
+import de.fff.ccgt.service.PreferencesService;
 
 
 public class SpectrogramView extends View {
 
     private static final String TAG = SpectrogramView.class.getSimpleName();
 
+    private final boolean isSpectrogramLogarithmic;
+
     private int position;
     private double pitch;
     private float[] amplitudes;
     private Paint pixelPaint;
 
-
     public SpectrogramView(Context context) {
         super(context);
+        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
         init();
     }
 
     public SpectrogramView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
         init();
     }
 
     public SpectrogramView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
         init();
     }
 
@@ -52,15 +57,14 @@ public class SpectrogramView extends View {
         amplitudes = inBuffer;
     }
 
+    // TODO: 05.10.24 make freq's configurable, improve performance
     private int frequencyToBin(final double frequency, Canvas canvas) {
         final double minFrequency = 20; // Hz
         final double maxFrequency = 4000;
         int bin = 0;
-        final boolean logarithmic = true;
-        // todo fetch logarithmic from preferences
         if(frequency != 0 && frequency > minFrequency && frequency < maxFrequency) {
             double binEstimate;
-            if(logarithmic) {
+            if(isSpectrogramLogarithmic) {
                 final double minCent = PitchConverter.hertzToAbsoluteCent(minFrequency);
                 final double maxCent = PitchConverter.hertzToAbsoluteCent(maxFrequency);
                 final double absCent = PitchConverter.hertzToAbsoluteCent(frequency);

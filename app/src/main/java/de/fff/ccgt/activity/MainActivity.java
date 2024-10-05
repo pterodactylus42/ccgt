@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,7 +33,6 @@ import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.service.PreferencesService;
 import de.fff.ccgt.view.SpectrogramView;
 
-
 /*
  * ccgt -  console curses guitar tuner
  *
@@ -46,7 +46,6 @@ import de.fff.ccgt.view.SpectrogramView;
  * notices must be preserved. Contributors provide
  * an express grant of patent rights.
  */
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -91,16 +90,14 @@ public class MainActivity extends AppCompatActivity {
 
         initCalibSpinner();
 
-        audioService = new AudioService();
+        preferencesService = new PreferencesService(this.getApplicationContext());
+        pitchService = new PitchService();
+        audioService = new AudioService(this.getApplicationContext());
+        consoleService = new ConsoleService();
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
-        pitchService = new PitchService();
-
-        consoleService = new ConsoleService();
         startDisplay();
-
-        preferencesService = new PreferencesService(this.getApplicationContext());
 
     }
 
@@ -157,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.yin: // TODO: 04.10.24 let AudioService do this and put value to Prefs
+            case R.id.yin:
                 audioService.stopAudio();
                 audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "Yin selected", Toast.LENGTH_SHORT).show();
@@ -248,14 +245,14 @@ public class MainActivity extends AppCompatActivity {
 
     public AudioProcessor getFftProcessor() {
         AudioProcessor fftProcessor = new AudioProcessor() {
-            // TODO: 04.10.24 get BUFFERSIZE from PreferencesService
-            final FFT fft = new FFT(AudioService.BUFFERSIZE);
-            final float[] amplitudes = new float[AudioService.BUFFERSIZE * 2];
+            int buffersize = preferencesService.getBufferSize();
+            final FFT fft = new FFT(buffersize);
+            final float[] amplitudes = new float[buffersize * 2];
 
             @Override
             public boolean process(AudioEvent audioEvent) {
                 float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-                float[] transformBuffer = new float[AudioService.BUFFERSIZE * 4];
+                float[] transformBuffer = new float[buffersize * 4];
                 System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
                 fft.forwardTransform(transformBuffer);
                 //modulus: absolute value of complex fourier coefficient aka magnitude
@@ -269,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void processingFinished() {
-//                    Log.d(TAG, "processingFinished: fftProcessor");
+                    Log.d(TAG, "processingFinished: fftProcessor");
             }
         };
 

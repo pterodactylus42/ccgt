@@ -10,15 +10,10 @@ public class PreferencesService {
 
     private final static String TAG = PreferencesService.class.getSimpleName();
 
-    private Context context;
-    private SharedPreferences sharedPreferences;
-
-    private AudioService audioService;
+    private final SharedPreferences sharedPreferences;
 
     public PreferencesService(Context context) {
-        this.context = context;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        audioService = new AudioService();
     }
 
     public PitchProcessor.PitchEstimationAlgorithm getAlgorithm() {
@@ -42,7 +37,7 @@ public class PreferencesService {
         String calibrationFreq = sharedPreferences.getString("calibration", "");
         if(!calibrationFreq.isEmpty()) {
             Log.d(TAG,"Setting calibrationFreq to " + calibrationFreq);
-            return Double.valueOf(calibrationFreq);
+            return Double.parseDouble(calibrationFreq);
         }
         return 440.0;
     }
@@ -50,9 +45,8 @@ public class PreferencesService {
     public int getSampleRate() {
         String samplerate = sharedPreferences.getString("samplerate", "");
         if(!samplerate.isEmpty()) {
-            audioService.getValidSampleRates();
             Log.d(TAG,"Setting samplerate to " + samplerate);
-            return Integer.valueOf(samplerate);
+            return Integer.parseInt(samplerate);
         }
         return 8000;
     }
@@ -60,8 +54,8 @@ public class PreferencesService {
     public int getBufferSize() {
         String buffersize = sharedPreferences.getString("buffersize", "");
         if(!buffersize.isEmpty()) {
-            Log.d(TAG,"Setting samplerate to " + buffersize);
-            return Integer.valueOf(buffersize);
+            Log.d(TAG,"Setting buffersize to " + buffersize);
+            return Integer.parseInt(buffersize);
         }
         return 2048;
     }

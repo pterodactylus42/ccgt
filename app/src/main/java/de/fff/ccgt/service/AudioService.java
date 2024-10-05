@@ -1,5 +1,6 @@
 package de.fff.ccgt.service;
 
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.util.Log;
@@ -11,39 +12,43 @@ import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchProcessor;
-import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 
 public class AudioService {
 
-    private final static String TAG = AudioService.class.getSimpleName();
+    private final PreferencesService preferencesService;
 
-    // todo: use values from preferences
-    public final static int SAMPLERATE = 8000;
-    public final static int BUFFERSIZE = 2048;
-    public final static int OVERLAP = (BUFFERSIZE/4)*3;
-    public final static PitchEstimationAlgorithm DEFAULT_ALGORITHM = PitchProcessor.PitchEstimationAlgorithm.YIN;
+    private final static String TAG = AudioService.class.getSimpleName();
 
     private AudioDispatcher audioDispatcher;
 
+    public AudioService(Context context) {
+        preferencesService = new PreferencesService(context);
+    }
+
     public void startAudio(PitchDetectionHandler pitchDetectionHandler, AudioProcessor fftProcessor) {
-        startAudio(DEFAULT_ALGORITHM, pitchDetectionHandler, fftProcessor);
+        startAudio(preferencesService.getAlgorithm(), pitchDetectionHandler, fftProcessor);
     }
 
         // TODO: 02.07.24 add enum with human readable names for Algorithms
     public void startAudio(PitchProcessor.PitchEstimationAlgorithm pitchAlgorithm, PitchDetectionHandler pitchDetectionHandler, AudioProcessor fftProcessor) {
         if(audioDispatcher == null) {
-            audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(SAMPLERATE, BUFFERSIZE, OVERLAP);
-
-
-            synchronized (this) {
-                audioDispatcher.addAudioProcessor(new LowPassFS(3000, SAMPLERATE));
-                audioDispatcher.addAudioProcessor(new HighPass(70, SAMPLERATE));
-                AudioProcessor pitchProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithm, SAMPLERATE, BUFFERSIZE, pitchDetectionHandler);
+            int samplerate = preferencesService.getSampleRate();
+            int buffersize = preferencesService.getBufferSize();
+            audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(samplerate, buffersize, getOverlap());
+            synchronized (this) { // TODO: 05.10.24 make highpass and lowpass freq configurable
+                audioDispatcher.addAudioProcessor(new LowPassFS(3000, samplerate));
+                audioDispatcher.addAudioProcessor(new HighPass(70, samplerate));
+                AudioProcessor pitchProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
                 audioDispatcher.addAudioProcessor(pitchProcessor);
                 audioDispatcher.addAudioProcessor(fftProcessor);
                 new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
             }
+            Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize + " overlap " + getOverlap());
         }
+    }
+
+    private int getOverlap() {
+        return (preferencesService.getBufferSize()/4)*3;
     }
 
     public void stopAudio() {
@@ -55,6 +60,7 @@ public class AudioService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            Log.d(TAG, "stopAudio: audioDispatcher stopped");
         }
     }
 
