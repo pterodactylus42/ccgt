@@ -43,6 +43,7 @@
             app:title="@string/display_title" />
         <SwitchPreferenceCompat
             app:key="splash"
+            app:defaultValue="true"
             app:title="@string/splash_title" />
         <SwitchPreferenceCompat
             app:key="logspectrogram"

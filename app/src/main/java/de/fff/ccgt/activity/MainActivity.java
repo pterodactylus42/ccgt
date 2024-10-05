@@ -18,8 +18,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-
-import java.util.Arrays;
 import java.util.Objects;
 
 import be.tarsos.dsp.AudioEvent;
@@ -31,6 +29,7 @@ import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
 import de.fff.ccgt.service.ConsoleService;
 import de.fff.ccgt.service.PitchService;
+import de.fff.ccgt.service.PreferencesService;
 import de.fff.ccgt.view.SpectrogramView;
 
 
@@ -56,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private AudioService audioService;
     private PitchService pitchService;
     private ConsoleService consoleService;
+    private PreferencesService preferencesService;
 
     private float pitchInHz = 0;
     private double centsDeviation = 0;
@@ -99,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
 
         consoleService = new ConsoleService();
         startDisplay();
+
+        preferencesService = new PreferencesService(this.getApplicationContext());
 
     }
 
@@ -178,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startDisplay() {
-
         displayUpdateThread = new Thread(() -> {
             while (true) {
                 try {
@@ -202,6 +203,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
         super.onResume();
+        preferencesService.isShowSplash();
+        preferencesService.getAlgorithm();
+        preferencesService.isDisplaySlow();
+        preferencesService.getBufferSize();
+        preferencesService.getCalibrationFreq();
+        preferencesService.getSampleRate();
+        preferencesService.isShowOctave();
+        preferencesService.isSpectrogramLogarithmic();
     }
 
     @Override

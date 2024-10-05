@@ -35,12 +35,16 @@
         <item>11025</item>
         <item>22050</item>
         <item>44100</item>
+        <item>48000</item>
+        <item>96000</item>
     </string-array>
     <string-array name="samplerate_values">
         <item>8000</item>
         <item>11025</item>
         <item>22050</item>
         <item>44100</item>
+        <item>48000</item>
+        <item>96000</item>
     </string-array>
 
     <string-array name="buffersize_entries">
