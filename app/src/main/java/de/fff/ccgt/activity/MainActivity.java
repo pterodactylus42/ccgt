@@ -19,6 +19,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import be.tarsos.dsp.AudioEvent;
@@ -59,9 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private float pitchInHz = 0;
     private double centsDeviation = 0;
 
-    private final static int[] REFERENCE_FREQUENCIES = { 437, 438, 439, 440, 441, 442, 443 };
-
-    private double referenceFrequency = 440.0;
+    // TODO: 06.10.24 somehow get in sync with the string array
+    private final static List<Integer> REFERENCE_FREQUENCIES = Arrays.asList(437, 438, 439, 440, 441, 442, 443);
 
     private SpectrogramView spectrogramView;
     private TextView pitchNameTV, octTV, freqTV, consoleTV;
@@ -87,8 +88,6 @@ public class MainActivity extends AppCompatActivity {
         calibSeekBar = findViewById(R.id.calibrationSeekBar);
         consoleTV = findViewById(R.id.console);
 
-        initCalibSpinner();
-
         preferencesService = new PreferencesService(this.getApplicationContext());
         pitchService = new PitchService();
         audioService = new AudioService(this.getApplicationContext());
@@ -96,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
+        initCalibration(true);
         handleShowOctave();
         startDisplay();
 
@@ -109,47 +109,52 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initCalibSpinner() {
+    private void initCalibration(boolean setListener) {
         calibSpinner.setBackgroundColor(Color.DKGRAY);
-        calibSpinner.setSelection(3);
-        calibSeekBar.setProgress(3);
-        calibSeekBar.setOnSeekBarChangeListener(
-                new SeekBar.OnSeekBarChangeListener() {
-                    int progress = 0;
+        int index = REFERENCE_FREQUENCIES.indexOf(preferencesService.getCalibrationFreq());
+        calibSpinner.setSelection(index);
+        calibSeekBar.setProgress(index);
 
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar,
-                                                  int progressValue, boolean fromUser) {
-                        progress = progressValue;
-                        calibSpinner.setSelection(progress);
-                        referenceFrequency = REFERENCE_FREQUENCIES[progress];
+        if(setListener) {
+            calibSeekBar.setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        int progress = 0;
+
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar,
+                                                      int progressValue, boolean fromUser) {
+                            progress = progressValue;
+                            calibSpinner.setSelection(progress);
+                            preferencesService.setCalibrationFreq(REFERENCE_FREQUENCIES.get(progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+                        }
+                    });
+
+            calibSpinner.setOnItemSelectedListener(
+                    new AdapterView.OnItemSelectedListener() {
+                        int selection = 0;
+
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            selection = position;
+                            calibSeekBar.setProgress(selection);
+                            preferencesService.setCalibrationFreq(REFERENCE_FREQUENCIES.get(selection));
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+                        }
                     }
+            );
+        }
 
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                    }
-                });
-
-        calibSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
-                    int selection = 0;
-
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        selection = position;
-                        calibSeekBar.setProgress(selection);
-                        referenceFrequency = REFERENCE_FREQUENCIES[selection];
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                }
-        );
     }
 
     @Override
@@ -165,17 +170,17 @@ public class MainActivity extends AppCompatActivity {
             case R.id.yin:
                 audioService.stopAudio();
                 audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "Yin selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Yin selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.yin_fft:
                 audioService.stopAudio();
                 audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "Yin FFT selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Yin FFT selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.mpm:
                 audioService.stopAudio();
                 audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "MPM selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "MPM selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.settings:
                 startActivity(new Intent(this,SettingsActivity.class));
@@ -207,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        initCalibration(false);
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
         handleShowOctave();
     }
@@ -223,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
     public PitchDetectionHandler getPitchDetectionHandler() {
         @SuppressLint("DefaultLocale") PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
             pitchInHz = pitchDetectionResult.getPitch();
+            int referenceFrequency = preferencesService.getCalibrationFreq();
             runOnUiThread(() -> {
                 if (pitchDetectionResult.isPitched()) {
                     //make it fade from deep red to green
@@ -273,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
         return fftProcessor;
     }
+
     private Runnable getUpdateConsoleRunnable() {
         Runnable updateConsoleRunnable = () -> {
             consoleTV.setText(consoleService.newConsoleContents(centsDeviation));
