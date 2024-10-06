@@ -38,21 +38,17 @@ public class PreferencesService {
     public int getCalibrationFreq() {
         String calibrationFreq = sharedPreferences.getString("calibration", "");
         if(!calibrationFreq.isEmpty()) {
-            Log.d(TAG,"calibrationFreq " + calibrationFreq);
             return Integer.parseInt(calibrationFreq);
         }
         return 440;
     }
 
     public void setCalibrationFreq(int freq) {
-        String calibrationFreq = sharedPreferences.getString("calibration", "");
-        if(!calibrationFreq.isEmpty()) {
-            if(! (getCalibrationFreq() == freq) ) {
-                Log.d(TAG,"Setting calibrationFreq to " + freq);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("calibration", String.valueOf(freq));
-                editor.apply();
-            }
+        if(! (getCalibrationFreq() == freq) ) {
+            Log.d(TAG,"Setting calibrationFreq to " + freq);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("calibration", String.valueOf(freq));
+            editor.apply();
         }
     }
 
