@@ -9,6 +9,8 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 public class PreferencesService {
 
     private final static String TAG = PreferencesService.class.getSimpleName();
+    private final static int SLOW_DISPLAY = 255;
+    private final static int FAST_DISPLAY = 127;
 
     private final SharedPreferences sharedPreferences;
 
@@ -64,6 +66,15 @@ public class PreferencesService {
         boolean slow = sharedPreferences.getBoolean("slow", false);
         Log.d(TAG,"Setting slow speed to " + slow);
         return slow;
+    }
+
+    public int getDisplayWaitTime() {
+        if(isDisplaySlow()) {
+            Log.d(TAG,"Setting display wait time to " + SLOW_DISPLAY);
+            return SLOW_DISPLAY;
+        }
+        Log.d(TAG,"Setting display wait time to " + FAST_DISPLAY);
+        return FAST_DISPLAY;
     }
 
     public boolean isShowSplash() {

@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         spectrogramView = findViewById(R.id.spectrogram);
         pitchNameTV = findViewById(R.id.note);
         octTV = findViewById(R.id.octave);
-        octTV.setTextColor(Color.WHITE);
         freqTV = findViewById(R.id.freq);
         freqTV.setTextColor(Color.WHITE);
         calibSpinner = findViewById(R.id.spinner);
@@ -97,8 +96,17 @@ public class MainActivity extends AppCompatActivity {
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
+        handleShowOctave();
         startDisplay();
 
+    }
+
+    private void handleShowOctave() {
+        if(preferencesService.isShowOctave()) {
+            octTV.setTextColor(Color.WHITE);
+        } else {
+            octTV.setTextColor(Color.BLACK);
+        }
     }
 
     private void initCalibSpinner() {
@@ -181,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 try {
                     displayHandler.post(getUpdateConsoleRunnable());
-                    Thread.sleep(255);
+                    Thread.sleep(preferencesService.getDisplayWaitTime());
                 } catch (InterruptedException e) {
                     //e.printStackTrace();
                 }
@@ -198,16 +206,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
         super.onResume();
-        preferencesService.isShowSplash();
-        preferencesService.getAlgorithm();
-        preferencesService.isDisplaySlow();
-        preferencesService.getBufferSize();
-        preferencesService.getCalibrationFreq();
-        preferencesService.getSampleRate();
-        preferencesService.isShowOctave();
-        preferencesService.isSpectrogramLogarithmic();
+        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+        handleShowOctave();
     }
 
     @Override
