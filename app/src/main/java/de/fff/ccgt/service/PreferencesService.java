@@ -64,22 +64,22 @@ public class PreferencesService {
 
     public boolean isDisplaySlow() {
         boolean slow = sharedPreferences.getBoolean("slow", false);
-        Log.d(TAG,"Setting slow speed to " + slow);
+//        Log.d(TAG,"isDisplaySlow " + slow);
         return slow;
     }
 
     public int getDisplayWaitTime() {
         if(isDisplaySlow()) {
-            Log.d(TAG,"Setting display wait time to " + SLOW_DISPLAY);
+//            Log.d(TAG,"Setting display wait time to " + SLOW_DISPLAY);
             return SLOW_DISPLAY;
         }
-        Log.d(TAG,"Setting display wait time to " + FAST_DISPLAY);
+//        Log.d(TAG,"Setting display wait time to " + FAST_DISPLAY);
         return FAST_DISPLAY;
     }
 
     public boolean isShowSplash() {
         boolean splash = sharedPreferences.getBoolean("splash", false);
-        Log.d(TAG,"Setting show splash to " + splash);
+        Log.d(TAG,"isShowSplash " + splash + " sharedPreferences " + sharedPreferences.toString());
         return splash;
     }
 

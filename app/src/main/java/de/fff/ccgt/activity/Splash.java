@@ -18,8 +18,11 @@ import static android.util.Log.d;
 import java.util.Objects;
 
 import de.fff.ccgt.R;
+import de.fff.ccgt.service.PreferencesService;
 
 public class Splash extends AppCompatActivity {
+
+    private PreferencesService preferencesService;
 
     TextView textView;
     int currentStringNum = 0;
@@ -42,6 +45,10 @@ public class Splash extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        preferencesService = new PreferencesService(getApplicationContext());
+        preferencesService.isShowSplash();
+
         setContentView(R.layout.activity_splash);
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -50,11 +57,28 @@ public class Splash extends AppCompatActivity {
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1234);
         } else {
-            textView = findViewById(R.id.introTextView);
-            appendText();
+            handlePreferences();
         }
 
+    }
 
+    // warning: preferences don't seem to work if permissions must be requested in the same startup (first start)
+    private void handlePreferences() {
+        if(preferencesService.isShowSplash()) {
+            showSplash();
+        } else {
+            goToMain();
+        }
+    }
+
+    private void showSplash() {
+        textView = findViewById(R.id.introTextView);
+        appendText();
+    }
+
+        private void goToMain() {
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+        finish();
     }
 
     private void appendText() {
@@ -65,8 +89,7 @@ public class Splash extends AppCompatActivity {
             if(currentStringNum < intro.length) {
                 appendText();
             } else {
-                startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                finish();
+                goToMain();
             }
 
         }, 50);
@@ -77,8 +100,7 @@ public class Splash extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1234) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                textView = findViewById(R.id.introTextView);
-                appendText();
+                showSplash();
             } else {
                 d("Splash: ", "permission denied by user ....");
             }
