@@ -1,2 +1,1 @@
-A simple, straightforward and intuitive chromatic tuner.
-
+A simple, ad-free, straightforward and intuitive chromatic tuner.
