@@ -1,7 +1,12 @@
 package de.fff.ccgt.service;
 
+import android.util.Log;
+
+import de.fff.ccgt.activity.MainActivity;
+
 public class PitchService {
 
+    private final static String TAG = PitchService.class.getSimpleName();
     private final static String[] PITCHCLASSES = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
 
     public String getNearestPitchClass(double freq, double referenceFrequency) {
@@ -60,7 +65,7 @@ public class PitchService {
 
         double centsDeviation;
 
-        if(integerDistance > 0) {
+        if(distance > 0) {
             if(distanceError > 0.5 || distanceError == 0.5) {
                 centsDeviation = (distanceError-1) * 100;
             } else {
@@ -73,6 +78,9 @@ public class PitchService {
                 centsDeviation = -(distanceError * 100);
             }
         }
+//        if(integerDistance == 0 && !Double.isNaN(distance)) {
+//            Log.d(TAG, "getCentsDeviation: distance " + distance + " integerDistance " + integerDistance + " distanceError " + distanceError + " centsDeviation " + centsDeviation);
+//        }
 
         return centsDeviation;
     }
