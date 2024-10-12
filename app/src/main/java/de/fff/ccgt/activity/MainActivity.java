@@ -19,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -59,17 +60,22 @@ public class MainActivity extends AppCompatActivity {
     private PreferencesService preferencesService;
 
     private float pitchInHz = 0;
+
     private double centsDeviation = 0;
 
     // TODO: 06.10.24 somehow get in sync with the string array
     private final static List<Integer> REFERENCE_FREQUENCIES = Arrays.asList(437, 438, 439, 440, 441, 442, 443);
 
     private SpectrogramView spectrogramView;
-    private TextView pitchNameTV, octTV, freqTV, consoleTV;
+    private TextView pitchNameTV;
+    private TextView octTV;
+    private TextView freqTV;
+
+    private TextView consoleTV;
     private Spinner calibSpinner;
     private SeekBar calibSeekBar;
 
-    private final Handler displayHandler = new Handler();
+    private final static Handler displayHandler = new Handler();
     private Thread displayUpdateThread = null;
 
     @Override
@@ -193,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         displayUpdateThread = new Thread(() -> {
             while (true) {
                 try {
-                    displayHandler.post(getUpdateConsoleRunnable());
+                    displayHandler.post(new UpdateConsoleRunnable(this));
                     Thread.sleep(preferencesService.getDisplayWaitTime());
                 } catch (InterruptedException e) {
                     //e.printStackTrace();
@@ -227,7 +233,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public PitchDetectionHandler getPitchDetectionHandler() {
-        @SuppressLint("DefaultLocale") PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
+        @SuppressLint("DefaultLocale")
+        PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
             pitchInHz = pitchDetectionResult.getPitch();
             int referenceFrequency = preferencesService.getCalibrationFreq();
             runOnUiThread(() -> {
@@ -281,12 +288,35 @@ public class MainActivity extends AppCompatActivity {
         return fftProcessor;
     }
 
-    private Runnable getUpdateConsoleRunnable() {
-        Runnable updateConsoleRunnable = () -> {
-            consoleTV.setText(consoleService.newConsoleContents(centsDeviation));
-        };
+    private static class UpdateConsoleRunnable implements Runnable
+    {
+        private final WeakReference<MainActivity> mainActivityWeakReference;
 
-        return updateConsoleRunnable;
+        public UpdateConsoleRunnable(MainActivity myClassInstance)
+        {
+            mainActivityWeakReference = new WeakReference(myClassInstance);
+        }
+
+        @Override
+        public void run()
+        {
+            MainActivity mainActivity = mainActivityWeakReference.get();
+            if(mainActivity != null) {
+                mainActivity.getConsoleTV().setText(mainActivity.getConsoleService().newConsoleContents(mainActivity.getCentsDeviation()));
+            }
+        }
+    }
+
+    public ConsoleService getConsoleService() {
+        return consoleService;
+    }
+
+    public TextView getConsoleTV() {
+        return consoleTV;
+    }
+
+    public double getCentsDeviation() {
+        return centsDeviation;
     }
 
 }
