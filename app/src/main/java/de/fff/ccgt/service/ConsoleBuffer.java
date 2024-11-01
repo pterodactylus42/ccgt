@@ -2,29 +2,29 @@ package de.fff.ccgt.service;
 
 import java.util.Arrays;
 
-public class ConsoleService {
+public class ConsoleBuffer {
 
     private final static int ROWS = 20;
     private final String[] rowHistory;
     private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
     private double tunerLastCentsValue;
 
-    public ConsoleService() {
+    public ConsoleBuffer() {
         tunerLastCentsValue = 0;
         rowHistory = new String[ROWS];
-        initRowHistory();
+        initHistory();
     }
 
-    public String newConsoleContents(double centsDeviation) {
-        addTopRow(centsDeviation);
-        return addHeaderLine();
+    public String getNewContents(double centsDeviation) {
+        pushRow(centsDeviation);
+        return addHeader();
     }
 
-    private void addTopRow(double centsDeviation) {
-        putCentsToHistory(getHistoryRow(twoPointMovingAverageFilter(centsDeviation)));
+    private void pushRow(double centsDeviation) {
+        putToHistory(getHistoryRow(twoPointMovingAverageFilter(centsDeviation)));
     }
 
-    private String addHeaderLine() {
+    private String addHeader() {
         StringBuffer output = new StringBuffer();
         output.append(firstLine);
         output.append("\n");
@@ -35,21 +35,25 @@ public class ConsoleService {
         return output.toString();
     }
 
-
-
-    private void putCentsToHistory(String centsString){
+    private void putToHistory(String centsString){
         if (rowHistory.length - 1 >= 0)
             System.arraycopy(rowHistory, 0, rowHistory, 1, rowHistory.length - 1);
         rowHistory[0] = centsString;
     }
 
-    private void initRowHistory(){
+    private void initHistory(){
         Arrays.fill(rowHistory, "");
     }
 
     private String getHistoryRow(double cents) {
+
         int approximateCents = (int) cents;
         StringBuilder tmpstr = new StringBuilder("                                         \n");
+
+        if(Double.isNaN(cents)){
+            tmpstr.setCharAt(20, 'I');
+            return tmpstr.toString();
+        }
 
         if(cents < -3) {
             if(cents < -40) {
@@ -69,16 +73,16 @@ public class ConsoleService {
             }
 
         } else {
-            tmpstr.setCharAt(20, 'I');
+            tmpstr.setCharAt(20, '|');
         }
         return tmpstr.toString();
     }
 
+    // TODO: 01.11.24 make this filter configurable in prefs
     private double twoPointMovingAverageFilter(double actualCents) {
         double output = (actualCents + tunerLastCentsValue) / 2;
         tunerLastCentsValue = actualCents;
         return output;
     }
-
 
 }

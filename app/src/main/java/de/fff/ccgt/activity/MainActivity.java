@@ -32,7 +32,7 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
-import de.fff.ccgt.service.ConsoleService;
+import de.fff.ccgt.service.ConsoleBuffer;
 import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.service.PreferencesService;
 import de.fff.ccgt.view.SpectrogramView;
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private AudioService audioService;
     private PitchService pitchService;
-    private ConsoleService consoleService;
+    private ConsoleBuffer consoleService;
     private PreferencesService preferencesService;
 
     private float pitchInHz = 0;
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // TODO: 01.11.24 make this flag configurable in prefs
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.title_action_bar);
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         preferencesService = new PreferencesService(this.getApplicationContext());
         pitchService = new PitchService();
         audioService = new AudioService(this.getApplicationContext());
-        consoleService = new ConsoleService();
+        consoleService = new ConsoleBuffer();
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
@@ -304,12 +305,12 @@ public class MainActivity extends AppCompatActivity {
         {
             MainActivity mainActivity = mainActivityWeakReference.get();
             if(mainActivity != null) {
-                mainActivity.getConsoleTV().setText(mainActivity.getConsoleService().newConsoleContents(mainActivity.getCentsDeviation()));
+                mainActivity.getConsoleTV().setText(mainActivity.getConsoleService().getNewContents(mainActivity.getCentsDeviation()));
             }
         }
     }
 
-    public ConsoleService getConsoleService() {
+    public ConsoleBuffer getConsoleService() {
         return consoleService;
     }
 
