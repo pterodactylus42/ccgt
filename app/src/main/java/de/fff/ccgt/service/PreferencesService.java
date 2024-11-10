@@ -55,7 +55,7 @@ public class PreferencesService {
     public int getSampleRate() {
         String samplerate = sharedPreferences.getString("samplerate", "");
         if(!samplerate.isEmpty()) {
-            Log.d(TAG,"Setting samplerate to " + samplerate);
+            Log.d(TAG,"samplerate " + samplerate);
             return Integer.parseInt(samplerate);
         }
         return 8000;
@@ -64,7 +64,7 @@ public class PreferencesService {
     public int getBufferSize() {
         String buffersize = sharedPreferences.getString("buffersize", "");
         if(!buffersize.isEmpty()) {
-            Log.d(TAG,"Setting buffersize to " + buffersize);
+            Log.d(TAG,"buffersize " + buffersize);
             return Integer.parseInt(buffersize);
         }
         return 2048;
@@ -72,35 +72,38 @@ public class PreferencesService {
 
     public boolean isDisplaySlow() {
         boolean slow = sharedPreferences.getBoolean("slow", false);
-//        Log.d(TAG,"isDisplaySlow " + slow);
         return slow;
     }
 
     public int getDisplayWaitTime() {
         if(isDisplaySlow()) {
-//            Log.d(TAG,"Setting display wait time to " + SLOW_DISPLAY);
             return SLOW_DISPLAY;
         }
-//        Log.d(TAG,"Setting display wait time to " + FAST_DISPLAY);
         return FAST_DISPLAY;
     }
 
     public boolean isShowSplash() {
         boolean splash = sharedPreferences.getBoolean("splash", false);
-        Log.d(TAG,"isShowSplash " + splash + " sharedPreferences " + sharedPreferences.toString());
+        Log.d(TAG,"isShowSplash " + splash);
         return splash;
     }
 
     public boolean isSpectrogramLogarithmic() {
         boolean logspectrogram = sharedPreferences.getBoolean("logspectrogram", false);
-        Log.d(TAG,"Setting logarithmic spectrogram to " + logspectrogram);
+        Log.d(TAG,"isSpectrogramLogarithmic " + logspectrogram);
         return logspectrogram;
     }
 
     public boolean isShowOctave() {
         boolean showoctave = sharedPreferences.getBoolean("showoctave", false);
-        Log.d(TAG,"Setting show octave to " + showoctave);
+        Log.d(TAG,"isShowOctave " + showoctave);
         return showoctave;
+    }
+
+    public boolean isKeepScreenOn() {
+        boolean keepscreenon = sharedPreferences.getBoolean("keepscreenon", false);
+        Log.d(TAG,"isKeepScreenOn " + keepscreenon);
+        return keepscreenon;
     }
 
 }

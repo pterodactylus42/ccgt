@@ -51,6 +51,10 @@
         <SwitchPreferenceCompat
             app:key="showoctave"
             app:title="@string/octave_title" />
+        <SwitchPreferenceCompat
+            app:key="keepscreenon"
+            app:defaultValue="true"
+            app:title="@string/keep_screen_on_title" />
     </PreferenceCategory>
 
 </PreferenceScreen>

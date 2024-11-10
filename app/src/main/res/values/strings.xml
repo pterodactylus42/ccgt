@@ -18,4 +18,5 @@
     <string name="splash_title">Splash screen</string>
     <string name="spectrogram_title">Logarithmic spectrogram</string>
     <string name="octave_title">Show octave</string>
+    <string name="keep_screen_on_title">Keep Screen On</string>
 </resources>

@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private AudioService audioService;
     private PitchService pitchService;
-    private ConsoleBuffer consoleService;
+    private ConsoleBuffer consoleBuffer;
     private PreferencesService preferencesService;
 
     private float pitchInHz = 0;
@@ -83,8 +83,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // TODO: 01.11.24 make this flag configurable in prefs
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.title_action_bar);
 
@@ -100,14 +98,23 @@ public class MainActivity extends AppCompatActivity {
         preferencesService = new PreferencesService(this.getApplicationContext());
         pitchService = new PitchService();
         audioService = new AudioService(this.getApplicationContext());
-        consoleService = new ConsoleBuffer();
+        consoleBuffer = new ConsoleBuffer();
         audioService.getValidSampleRates();
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
+        handleKeepScreenOn();
         initCalibration(true);
         handleShowOctave();
         startDisplay();
 
+    }
+
+    private void handleKeepScreenOn() {
+        if(preferencesService.isKeepScreenOn()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
 
     private void handleShowOctave() {
@@ -221,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        handleKeepScreenOn();
         initCalibration(false);
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
         handleShowOctave();
@@ -305,13 +313,13 @@ public class MainActivity extends AppCompatActivity {
         {
             MainActivity mainActivity = mainActivityWeakReference.get();
             if(mainActivity != null) {
-                mainActivity.getConsoleTV().setText(mainActivity.getConsoleService().getNewContents(mainActivity.getCentsDeviation()));
+                mainActivity.getConsoleTV().setText(mainActivity.getConsoleBuffer().getNewContents(mainActivity.getCentsDeviation()));
             }
         }
     }
 
-    public ConsoleBuffer getConsoleService() {
-        return consoleService;
+    public ConsoleBuffer getConsoleBuffer() {
+        return consoleBuffer;
     }
 
     public TextView getConsoleTV() {
