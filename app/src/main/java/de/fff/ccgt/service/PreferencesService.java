@@ -22,9 +22,6 @@ public class PreferencesService {
     private final static int LOWPASS_FREQ = 3000;
     private final static int HIGHPASS_FREQ = 70;
 
-    // TODO: 06.10.24 somehow get in sync with the string array
-    // private final static List<Integer> REFERENCE_FREQUENCIES = Arrays.asList(437, 438, 439, 440, 441, 442, 443);
-
     private List<Integer> referenceFrequencies;
     private final SharedPreferences sharedPreferences;
 
