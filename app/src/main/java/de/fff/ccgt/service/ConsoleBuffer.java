@@ -78,7 +78,6 @@ public class ConsoleBuffer {
         return tmpstr.toString();
     }
 
-    // TODO: 01.11.24 make this filter configurable in prefs
     private double twoPointMovingAverageFilter(double actualCents) {
         double output = (actualCents + tunerLastCentsValue) / 2;
         tunerLastCentsValue = actualCents;

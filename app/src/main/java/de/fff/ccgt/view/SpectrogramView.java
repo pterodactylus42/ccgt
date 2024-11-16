@@ -57,7 +57,7 @@ public class SpectrogramView extends View {
         amplitudes = inBuffer;
     }
 
-    // TODO: 05.10.24 make freq's configurable, improve performance
+    // TODO: 05.10.24 take freq's from preferences, improve performance
     private int frequencyToBin(final double frequency, Canvas canvas) {
         final double minFrequency = 20; // Hz
         final double maxFrequency = 4000;

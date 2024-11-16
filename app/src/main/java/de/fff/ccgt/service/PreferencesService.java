@@ -2,20 +2,45 @@ package de.fff.ccgt.service;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
 import android.util.Log;
 import androidx.preference.PreferenceManager;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import be.tarsos.dsp.pitch.PitchProcessor;
+import de.fff.ccgt.R;
 
 public class PreferencesService {
 
     private final static String TAG = PreferencesService.class.getSimpleName();
     private final static int SLOW_DISPLAY = 255;
     private final static int FAST_DISPLAY = 127;
+    private final static int LOWPASS_FREQ = 3000;
+    private final static int HIGHPASS_FREQ = 70;
 
+    // TODO: 06.10.24 somehow get in sync with the string array
+    // private final static List<Integer> REFERENCE_FREQUENCIES = Arrays.asList(437, 438, 439, 440, 441, 442, 443);
+
+    private List<Integer> referenceFrequencies;
     private final SharedPreferences sharedPreferences;
 
     public PreferencesService(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        initReferenceFrequencies(context);
+    }
+
+    private void initReferenceFrequencies(Context context) {
+        String[] stringArray = context.getResources().getStringArray(R.array.calibration_values);
+        final int len = stringArray.length;
+        referenceFrequencies = new ArrayList<>(len);
+        for (int j = 0; j < len; j++) {
+            Integer i = Integer.parseInt(stringArray[j]);
+            referenceFrequencies.add(i);
+        }
     }
 
     public PitchProcessor.PitchEstimationAlgorithm getAlgorithm() {
@@ -43,6 +68,14 @@ public class PreferencesService {
         return 440;
     }
 
+    public int getCalibrationFreqIndex() {
+        return referenceFrequencies.indexOf(getCalibrationFreq());
+    }
+
+    public int getCalibrationFreqFor(int index) {
+        return referenceFrequencies.get(index);
+    }
+
     public void setCalibrationFreq(int freq) {
         if(! (getCalibrationFreq() == freq) ) {
             Log.d(TAG,"Setting calibrationFreq to " + freq);
@@ -52,9 +85,14 @@ public class PreferencesService {
         }
     }
 
-    public int getSampleRate() {
+    public void setCalibrationFreqByIndex(int index) {
+        setCalibrationFreq(getCalibrationFreqFor(index));
+    }
+
+        public int getSampleRate() {
         String samplerate = sharedPreferences.getString("samplerate", "");
         if(!samplerate.isEmpty()) {
+            logValidSampleRates();
             Log.d(TAG,"samplerate " + samplerate);
             return Integer.parseInt(samplerate);
         }
@@ -104,6 +142,24 @@ public class PreferencesService {
         boolean keepscreenon = sharedPreferences.getBoolean("keepscreenon", false);
         Log.d(TAG,"isKeepScreenOn " + keepscreenon);
         return keepscreenon;
+    }
+
+    public int getLowpassFreq() {
+        return LOWPASS_FREQ;
+    }
+
+    public int getHighpassFreq() {
+        return HIGHPASS_FREQ;
+    }
+
+    private void logValidSampleRates() {
+        for(int rate : new int[] {8000, 11025, 16000, 22050, 44100, 48000, 96000}) {
+            //Returns: ERROR_BAD_VALUE if the recording parameters are not supported by the hardware, [...]
+            int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            if(bufferSize > 0) {
+                Log.d(TAG, "getValidSampleRates: rate " + rate + " supported");
+            }
+        }
     }
 
 }

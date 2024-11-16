@@ -64,9 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
     private double centsDeviation = 0;
 
-    // TODO: 06.10.24 somehow get in sync with the string array
-    private final static List<Integer> REFERENCE_FREQUENCIES = Arrays.asList(437, 438, 439, 440, 441, 442, 443);
-
     private SpectrogramView spectrogramView;
     private TextView pitchNameTV;
     private TextView octTV;
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         pitchService = new PitchService();
         audioService = new AudioService(this.getApplicationContext());
         consoleBuffer = new ConsoleBuffer();
-        audioService.getValidSampleRates();
+
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
         handleKeepScreenOn();
@@ -127,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initCalibration(boolean setListener) {
         calibSpinner.setBackgroundColor(Color.DKGRAY);
-        int index = REFERENCE_FREQUENCIES.indexOf(preferencesService.getCalibrationFreq());
+        int index = preferencesService.getCalibrationFreqIndex();
         calibSpinner.setSelection(index);
         calibSeekBar.setProgress(index);
 
@@ -141,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                                                       int progressValue, boolean fromUser) {
                             progress = progressValue;
                             calibSpinner.setSelection(progress);
-                            preferencesService.setCalibrationFreq(REFERENCE_FREQUENCIES.get(progress));
+                            preferencesService.setCalibrationFreqByIndex(progress);
                         }
 
                         @Override
@@ -161,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                             selection = position;
                             calibSeekBar.setProgress(selection);
-                            preferencesService.setCalibrationFreq(REFERENCE_FREQUENCIES.get(selection));
+                            preferencesService.setCalibrationFreqByIndex(selection);
                         }
 
                         @Override
@@ -250,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
             int referenceFrequency = preferencesService.getCalibrationFreq();
             runOnUiThread(() -> {
                 if (pitchDetectionResult.isPitched()) {
-                    //make it fade from deep red to green
+                    //make it fade to green
                     int octetValue = pitchService.distanceErrorOctetValue(pitchInHz, referenceFrequency);
                     pitchNameTV.setTextColor(Color.rgb(octetValue, 250 - octetValue, octetValue));
                     pitchNameTV.setText(pitchService.getNearestPitchClass(pitchInHz, referenceFrequency));
