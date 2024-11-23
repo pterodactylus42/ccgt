@@ -60,7 +60,6 @@ public class SpectrogramView extends View {
         inBuffer = buffer;
     }
 
-    // TODO: 05.10.24 improve performance
     /*
      * scale frequency of bin i to a x pixel value
      */
