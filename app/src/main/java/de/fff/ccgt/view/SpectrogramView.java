@@ -18,49 +18,53 @@ public class SpectrogramView extends View {
 
     private static final String TAG = SpectrogramView.class.getSimpleName();
 
-    private final boolean isSpectrogramLogarithmic;
-
+    private boolean isSpectrogramLogarithmic;
+    private int samplerate;
     private int position;
     private double pitch;
-    private float[] amplitudes;
+    private float[] inBuffer;
     private Paint pixelPaint;
+    private double maxFrequency;
+    private double minFrequency;
+    private float[] amplitudesOnXAxis;
 
     public SpectrogramView(Context context) {
         super(context);
-        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
-        init();
+        init(new PreferencesService(getContext().getApplicationContext()));
     }
 
     public SpectrogramView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
-        init();
+        init(new PreferencesService(getContext().getApplicationContext()));
     }
 
     public SpectrogramView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        isSpectrogramLogarithmic = new PreferencesService(getContext().getApplicationContext()).isSpectrogramLogarithmic();
-        init();
+        init(new PreferencesService(getContext().getApplicationContext()));
     }
 
-    private void init() {
+    private void init(final PreferencesService preferencesService) {
+        isSpectrogramLogarithmic = preferencesService.isSpectrogramLogarithmic();
+        samplerate = preferencesService.getSampleRate();
         pixelPaint = new Paint();
         pixelPaint.setColor(Color.GRAY);
         pixelPaint.setAntiAlias(true);
         pixelPaint.setStyle(Paint.Style.STROKE);
-
         position = 0;
+        minFrequency = 20;
+        maxFrequency = samplerate / 2;
     }
 
-    public void feedSpectrogramView(double actualPitch, float[] inBuffer) {
+    public void feedSpectrogramView(double actualPitch, float[] buffer) {
         pitch = actualPitch;
-        amplitudes = inBuffer;
+        inBuffer = buffer;
     }
 
-    // TODO: 05.10.24 take freq's from preferences, improve performance
-    private int frequencyToBin(final double frequency, Canvas canvas) {
-        final double minFrequency = 20; // Hz
-        final double maxFrequency = 4000;
+    // TODO: 05.10.24 improve performance
+    /*
+     * scale frequency of bin i to a x pixel value
+     */
+    private int frequencyToBin(final double frequency, int canvasWidth) {
         int bin = 0;
         if(frequency != 0 && frequency > minFrequency && frequency < maxFrequency) {
             double binEstimate;
@@ -68,14 +72,14 @@ public class SpectrogramView extends View {
                 final double minCent = PitchConverter.hertzToAbsoluteCent(minFrequency);
                 final double maxCent = PitchConverter.hertzToAbsoluteCent(maxFrequency);
                 final double absCent = PitchConverter.hertzToAbsoluteCent(frequency);
-                binEstimate = (absCent - minCent) / maxCent * canvas.getWidth();
+                binEstimate = (absCent - minCent) / maxCent * canvasWidth;
             } else {
-                binEstimate  = ( (frequency - minFrequency) / (maxFrequency - minFrequency) ) * canvas.getWidth();
+                binEstimate  = ( (frequency - minFrequency) / (maxFrequency - minFrequency) ) * canvasWidth;
             }
-            if(binEstimate > canvas.getWidth()) {
+            if(binEstimate > canvasWidth) {
                 Log.d(TAG, "frequencyToBin: binEstimate exceeds view width: " + binEstimate);
             }
-            bin = canvas.getWidth() - 1 - (int) binEstimate;
+            bin = canvasWidth - 1 - (int) binEstimate;
             // if you prefer the other direction:
             // bin = (int) binEstimate - 1;
         }
@@ -84,44 +88,54 @@ public class SpectrogramView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        if(amplitudes != null) {
-            double maxAmplitude = 0;
-            //for every pixel - in width of view - calculate an amplitude
-            float[] pixeledAmplitudes = new float[getWidth()];
 
-            //iterate the frequency magnitudes array and map to pixels
-            for(int i = 0; i < amplitudes.length; i++) {
-                // bin width is samplerate / buffersize...
-                // center frequency of bin is i * samplerate / buffersize
-                // get the pixel for frequency of bin i
-                int pixelX = frequencyToBin( (i * (8000.0 / amplitudes.length)), canvas);
-                pixeledAmplitudes[pixelX] += amplitudes[i];
-                maxAmplitude = Math.max(pixeledAmplitudes[pixelX], maxAmplitude);
+        super.onDraw(canvas);
+
+        if(inBuffer != null) {
+
+            double maxAmplitude = 0;
+            if(amplitudesOnXAxis == null) {
+                amplitudesOnXAxis = new float[getWidth()];
             }
 
-            //draw the pixels
-            for(int i = 0; i < pixeledAmplitudes.length; i++) {
+            for(int i = 0; i < inBuffer.length; i++) {
+                // center frequency of bin i is i * samplerate / buffersize
+                int pixelX = frequencyToBin( (i * (samplerate / inBuffer.length)), canvas.getWidth());
+                amplitudesOnXAxis[pixelX] += inBuffer[i];
+                maxAmplitude = Math.max(amplitudesOnXAxis[pixelX], maxAmplitude);
+            }
+
+            // Log.d(TAG,"onDraw: getWidth() " + getWidth() + " getHeight() " + getHeight() + " maxAmplitude " + maxAmplitude + " position " + position);
+
+            for(int i = 0; i < amplitudesOnXAxis.length; i++) {
                 //create a shade of grey depending on the given amplitude
                 if(maxAmplitude != 0) {
-                    final int greyValue = (int) (Math.log1p(pixeledAmplitudes[i] / maxAmplitude) / Math.log1p(1.0000001) * 255);
+                    final int greyValue = (int) (Math.log1p(amplitudesOnXAxis[i] / maxAmplitude) / Math.log1p(1.0000001) * 255);
                     pixelPaint.setColor(Color.rgb(greyValue,greyValue,greyValue));
                 }
                 canvas.drawLine(i, position, i, position + 20, pixelPaint);
+                amplitudesOnXAxis[i] = 0.0f;
             }
 
             // draw the pitch slightly above the other pixels
             if(pitch != -1) {
-                int pitchIndex = frequencyToBin(pitch, canvas);
+                int pitchIndex = frequencyToBin(pitch, canvas.getWidth());
                 pixelPaint.setColor(Color.RED);
                 canvas.drawLine(pitchIndex, position - 15, pitchIndex, position + 5, pixelPaint);
             }
 
             pixelPaint.setColor(Color.BLACK);
-
-            // fixed position
             position = getHeight() / 2;
 
         }
     }
+
+    public void setSpectrogramLogarithmic(boolean spectrogramLogarithmic) {
+        isSpectrogramLogarithmic = spectrogramLogarithmic;
+    }
+
+    public void setSamplerate(int samplerate) {
+        this.samplerate = samplerate;
+    }
+
 }

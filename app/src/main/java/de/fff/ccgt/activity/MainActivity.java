@@ -122,6 +122,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void handleSpectrogramSettings() {
+        spectrogramView.setSpectrogramLogarithmic(preferencesService.isSpectrogramLogarithmic());
+        spectrogramView.setSamplerate(preferencesService.getSampleRate());
+    }
+
     private void initCalibration(boolean setListener) {
         calibSpinner.setBackgroundColor(Color.DKGRAY);
         int index = preferencesService.getCalibrationFreqIndex();
@@ -229,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
         initCalibration(false);
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
         handleShowOctave();
+        handleSpectrogramSettings();
     }
 
     @Override
