@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.util.Log;
+import android.widget.Toast;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioProcessor;
@@ -18,10 +19,12 @@ public class AudioService {
     private final PreferencesService preferencesService;
 
     private final static String TAG = AudioService.class.getSimpleName();
+    private final Context context;
 
     private AudioDispatcher audioDispatcher;
 
     public AudioService(Context context) {
+        this.context = context;
         preferencesService = new PreferencesService(context);
     }
 
@@ -33,16 +36,21 @@ public class AudioService {
         if(audioDispatcher == null) {
             int samplerate = preferencesService.getSampleRate();
             int buffersize = preferencesService.getBufferSize();
-            audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(samplerate, buffersize, getOverlap());
-            synchronized (this) {
-                audioDispatcher.addAudioProcessor(new LowPassFS(preferencesService.getLowpassFreq(), samplerate));
-                audioDispatcher.addAudioProcessor(new HighPass(preferencesService.getHighpassFreq(), samplerate));
-                AudioProcessor pitchProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
-                audioDispatcher.addAudioProcessor(pitchProcessor);
-                audioDispatcher.addAudioProcessor(fftProcessor);
-                new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
+            try {
+                Log.d(TAG,"startAudio: trying with samplerate " + samplerate + " buffersize " + buffersize);
+                audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(samplerate, buffersize, getOverlap());
+                synchronized (this) {
+                    audioDispatcher.addAudioProcessor(new LowPassFS(preferencesService.getLowpassFreq(), samplerate));
+                    audioDispatcher.addAudioProcessor(new HighPass(preferencesService.getHighpassFreq(), samplerate));
+                    AudioProcessor pitchProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
+                    audioDispatcher.addAudioProcessor(pitchProcessor);
+                    audioDispatcher.addAudioProcessor(fftProcessor);
+                    new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
+                }
+                Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize + " overlap " + getOverlap());
+            } catch (IllegalArgumentException e) {
+                Toast.makeText(context, "Failed to start Audio: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
-            Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize + " overlap " + getOverlap());
         }
     }
 
