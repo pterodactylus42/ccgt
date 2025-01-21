@@ -1,1 +1,1 @@
-A simple, ad-free, straightforward and intuitive chromatic tuner.
+console chromatic guitar tuner.

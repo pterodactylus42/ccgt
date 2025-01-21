@@ -1,1 +1,1 @@
-Ein simples, intuitives chromatisches Stimmgerät ohne Werbung.
+console chromatic guitar tuner.

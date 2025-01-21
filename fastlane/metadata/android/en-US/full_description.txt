@@ -1,17 +1,6 @@
-This tuning application is designed to be simple, straightforward and intuitive. It needs audio record permission.
-
-What I learned from the newer Tuner Apps available on the market is, they should be intuitive.
-
-Instead of just doing fft, this tuner uses the yin implementation from tarsos dsp, thanx to you guys over at belgium ! Really every user of this app should buy you a big mug of coffee :-)))
-
-A great improvement of yin algorithm compared to just bare fft is, you get less false harmonics. Where most tuners fail is recognition of the fundamental pitch of low notes on the guitar. Try this one, most likely it will work if background noise subsides :-)
-
-Additionally, you can choose one of four available pitch tracking algorithms.
-
-With the downward flowing histogram of pitch, the user gets an intuitive grip on what is going on while in the process of tuning the instrument.
-
-Many thanks to izzy for support, all of you out there who really want to know what is going on inside your android phone check out his page:
-
-https://android.izzysoft.de/articles.php
-
-greetings, and don't forget to play your guitar.
+console chromatic guitar tuner helps getting musical instruments in tune.
+It is ad-free, straightforward and intuitive. Only a few MB of storage are needed.
+The reference frequency A4 can be chosen from 437 to 443 Hz.
+Audio driver, algorithm and some other things can be adjusted to your instrument in the settings.
+The deviation from the next correct pitch is show as flowing histogram and in the color of the pitch name.
+Additionally the octave can be shown.
