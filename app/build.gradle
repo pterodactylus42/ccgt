@@ -9,8 +9,13 @@ android {
         applicationId "de.fff.ccgt"
         minSdkVersion 23
         targetSdkVersion 32
-        versionCode 1150
-        versionName "1.5"
+        /*
+            Match the version strings against app/src/main/AndroidManifest.xml if applicable.
+            Increment before you roll out a new release.
+            You should create a tag with the new versionName prepended with a "v" before building the new release.
+         */
+        versionCode 1151
+        versionName "1.51"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

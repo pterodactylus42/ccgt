@@ -1,21 +1,17 @@
-fdroid publishing guidelines
+SHORT version:
+    commit everything new
+    clean up
+    increment 	versionName
+    and        	versionCode
+    commit
+    create tag that matches the new versionName prepended with a "v"
+    create release
+    append signed apk
 
-JAR files are not accepted by the bot
-	by the way, what is "the bot"?
-i guess some kind of linux system that boots and tries to build the project with gradle
+LONGER version: follows
 
-JARs are deleted before build, then the build should still succeed
-
-fastlane structure
-	short description is really short, 80  chars max
-
-provide a signed and bundled release build apk with the github tag
-	don't put it into the repo, as everyone would fork it 
-
-how do you add srclibs?
-	this would require a git tutorial ;-)
-
-	git stuff (-:;-)
+git stuff
+----------------
 git commit
 	commits changes into the project
 git add [file]
@@ -45,20 +41,11 @@ distributed version control
 git has different servers, as opposed to former tools like svn which had central repos
 	distributed servers
 
-github
-	repos
-	code
-	issues
-	pull requests
-	forks
-.... github it's not git
-
 overwrite the working area with the last good copy
 git checkout -- hello.template
 git checkout -- [yourfile]
 
 git log --name-status --follow --oneline [filename]
-
 	oneline makes log output more simple
 
 checks out commits and their hashes
@@ -119,14 +106,18 @@ git push --tags
 	careful as this errors on existing tags
 
 
-
-
-
-
-
-FDROID
+FDROID publishing guidelines
 	...builds everything from source
 to guarantee that sources are available for end users
+
+JAR files are not accepted by the bot
+    JARs are deleted before build, then the build should still succeed
+
+fastlane structure
+	short description is really short, 80  chars max
+
+provide a signed and bundled release build apk with the github tag
+	don't put it into the repo, as everyone would fork it
 
 versioning
 	versionName - a user facing string
@@ -136,8 +127,10 @@ you have to match AndroidManifest.xml
 	and	build.gradle
 
 also tag name should match versionName
-	in	build.gradle
-
+	in	build.gradle,
+	but i guess tags are optional.
+nevertheless, es ist gute praxis, releases zu "taggen"
+f-droid erkennt automatisch neue versionen
 
 fdroid only builds from releases
 	version names
@@ -159,27 +152,12 @@ aus den gemachten angaben wird eine metadaten datei erstellt
 für korrekturanträge:
 https://gitlab.com/fdroid/fdroiddata
 
-es ist gute praxis, releases zu "taggen"
-f-droid erkennt automatisch neue versionen
-
-
-
 https://f-droid.org/en/docs/FAQ_-_App_Developers/
-goooood site :_))))
 
 https://gitlab.com/fdroid/fdroiddata
 
-
-f-droid forum
-"binary dependencies such as jar files have to be replaced by source built versions"
-no blobs accepted :-)))
-
 apparently , srclib is set in the metadata ...
-
-and fetched in the prebuild section.
-
-actually tarsos dsp is already there. bcoz tunerly uses it...
-
+    and fetched in the prebuild section.
 
 https://www.boddie.org.uk/david/www-repo/Personal/Updates/2018/2018-11-11.html
 
@@ -248,7 +226,3 @@ manipulate text in files and streams
 S tream ED itor
 
 pattern matching and text selection based on regular expressions
-
-
-
-
