@@ -23,6 +23,7 @@
 
 package be.tarsos.dsp.io.android;
 
+import android.annotation.SuppressLint;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import be.tarsos.dsp.AudioDispatcher;
@@ -52,6 +53,7 @@ public class AudioDispatcherFactory {
 	 *            The size of the overlap (in samples).
 	 * @return A new AudioDispatcher
 	 */
+	@SuppressLint("MissingPermission")
 	public static AudioDispatcher fromDefaultMicrophone(final int sampleRate,
 			final int audioBufferSize, final int bufferOverlap) {
 		int minAudioBufferSize = AudioRecord.getMinBufferSize(sampleRate,
