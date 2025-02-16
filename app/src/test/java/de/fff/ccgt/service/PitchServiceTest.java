@@ -13,7 +13,7 @@ public class PitchServiceTest extends TestCase {
     private double referenceFreq;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         pitchService = new PitchService();
         referenceFreq = 440.0;
     }
