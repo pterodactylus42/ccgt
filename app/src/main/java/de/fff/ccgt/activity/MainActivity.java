@@ -59,14 +59,12 @@ public class MainActivity extends AppCompatActivity {
     private PreferencesService preferencesService;
 
     private float pitchInHz = 0;
-
     private double centsDeviation = 0;
 
     private SpectrogramView spectrogramView;
     private TextView pitchNameTV;
     private TextView octTV;
     private TextView freqTV;
-
     private TextView consoleTV;
     private Spinner calibSpinner;
     private SeekBar calibSeekBar;
@@ -97,30 +95,20 @@ public class MainActivity extends AppCompatActivity {
 
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
 
-        handleKeepScreenOn();
         initCalibration(true);
-        handleShowOctave();
         startDisplay();
+        handlePreferences();
 
     }
-
-    private void handleKeepScreenOn() {
+    private void handlePreferences() {
         if(preferencesService.isKeepScreenOn()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-    }
 
-    private void handleShowOctave() {
-        if(preferencesService.isShowOctave()) {
-            octTV.setTextColor(Color.WHITE);
-        } else {
-            octTV.setTextColor(Color.BLACK);
-        }
-    }
+        octTV.setTextColor(preferencesService.isShowOctave() ? Color.WHITE : Color.BLACK);
 
-    private void handleSpectrogramSettings() {
         spectrogramView.setSpectrogramLogarithmic(preferencesService.isSpectrogramLogarithmic());
         spectrogramView.setSamplerate(preferencesService.getSampleRate());
     }
@@ -228,11 +216,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        handleKeepScreenOn();
         initCalibration(false);
         audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
-        handleShowOctave();
-        handleSpectrogramSettings();
+        handlePreferences();
     }
 
     @Override
@@ -257,8 +243,7 @@ public class MainActivity extends AppCompatActivity {
                     pitchNameTV.setText(pitchService.getNearestPitchClass(pitchInHz, referenceFrequency));
                     centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
                 } else {
-                    pitchService.getNearestPitchClass(pitchInHz, referenceFrequency);
-                    centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
+                    centsDeviation = Double.NaN;
                     pitchNameTV.setTextColor(Color.WHITE);
                     pitchNameTV.setText("-");
                 }
