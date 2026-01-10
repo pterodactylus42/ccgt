@@ -6,6 +6,7 @@ SHORT version:
     commit
     create tag that matches the new versionName prepended with a "v"
     create release
+    build bundled and signed apk
     append signed apk
 
 LONGER version: follows
