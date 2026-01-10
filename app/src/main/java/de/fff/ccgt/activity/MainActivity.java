@@ -21,8 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import be.tarsos.dsp.AudioEvent;
@@ -316,20 +314,20 @@ public class MainActivity extends AppCompatActivity {
         {
             MainActivity mainActivity = mainActivityWeakReference.get();
             if(mainActivity != null) {
-                mainActivity.getConsoleTV().setText(mainActivity.getConsoleBuffer().getNewContents(mainActivity.getCentsDeviation()));
+                mainActivity.getConsoleTV().setText(mainActivity.getConsoleBuffer().push(mainActivity.getCentsDeviation()));
             }
         }
     }
 
-    public ConsoleBuffer getConsoleBuffer() {
+    private ConsoleBuffer getConsoleBuffer() {
         return consoleBuffer;
     }
 
-    public TextView getConsoleTV() {
+    private TextView getConsoleTV() {
         return consoleTV;
     }
 
-    public double getCentsDeviation() {
+    private double getCentsDeviation() {
         return centsDeviation;
     }
 

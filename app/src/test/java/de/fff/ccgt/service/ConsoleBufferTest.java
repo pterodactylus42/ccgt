@@ -22,12 +22,12 @@ public class ConsoleBufferTest {
     public void testMiddleMarkerChar() {
         ConsoleBuffer consoleBuffer = new ConsoleBuffer();
 
-        String consoleContentsPitched = consoleBuffer.getNewContents(0);
+        String consoleContentsPitched = consoleBuffer.push(0);
         assertNotNull(consoleContentsPitched);
         System.out.println(consoleContentsPitched);
         assertFalse("Console should not use a capital I as marker character when pitched", consoleContentsPitched.contains("I"));
 
-        String consoleContentsUnPitched = consoleBuffer.getNewContents(Double.NaN);
+        String consoleContentsUnPitched = consoleBuffer.push(Double.NaN);
         assertNotNull(consoleContentsUnPitched);
         System.out.println(consoleContentsUnPitched);
         assertTrue("Console should use a capital I as marker character when unpitched", consoleContentsUnPitched.contains("I"));
