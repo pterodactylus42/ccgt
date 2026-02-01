@@ -1,0 +1,205 @@
+KONFIGURATION
+
+git config --global user.name "My Name"
+	set username
+git config --global user.email "myemail@example.com"
+	set user email
+git config --list
+	show config values
+
+BRANCHEN
+
+git branch
+	list branches
+git branch -r
+	list remote branches
+git branch -d [branchName]
+	delete local branch
+git push origin --delete [branchName]
+	delete remote branch
+git checkout [branchName]
+	checkout branch
+git branch [branchName]
+	branch mit namen erzeugen
+git checkout -b [branchName]
+	branch mit namen erzeugen und in den branch wechseln
+git push --set-upstream origin [branchName]
+	neu erzeugten branch hochladen
+git push origin :feature/LD-96--liquibase-schema 
+	den Branch im Repo löschen
+
+KOLLEGEN HELFEN / STASH
+
+git stash
+	record current state of working dir
+	save local modifications away
+git stash list
+	list stashes
+git stash
+	stash added files
+git stash apply
+	pull out stash and add
+git stash pop
+
+AKTUELL BLEIBEN
+
+git fetch
+git rebase
+--immer auf origin/master
+--bei Konflikten kommunizieren
+--generelle Strategie rebase
+--merge auch möglich, aber nicht benutzen, nicht mit rebase mischen
+--im worst case hat git alle Mittel an Bord um Konflikte aufzulösen
+--lang laufende Branches zwischendurch regelmäßig aktualisieren
+
+AUSBESSERN
+
+	für den Fall, dass ein isolierter commit schief geht macht man folgendes:
+git checkout -b neuer/branch_foo
+	dieser branch enthält dann den commit.
+git checkout master
+git reset --hard origin/master
+	damit setze ich den lokalen master auf den stand zurück, den er auch für alle anderen hat
+git checkout neuer/branch_foo (ohne -b für neuen branch)
+	jetzt bin ich wieder auf meinen letzten änderungen und kann weiter machen
+
+git commit --amend
+	den letzten commit ändern
+git commit --amend -m "an updated commit message"
+	die aktuellste commit nachricht ändern
+git add foo.bar
+git commit --amend --no-edit
+	die Datei foo.bar zum letzten commit hinzufügen ohne die commitnachricht zu ändern
+
+git rebase -i origin/master
+	alle commits seit Startpunkt anschauen und einzeln behandeln
+
+rebase: Du nimmst Deine Commits und ziehst sie auf einen neuen Anfang um
+	Du nimmst die changesets Deiner Commits (patches, diffs) und wendest sie nacheinander auf einen anderen Anfang an
+
+git branch 
+git checkout master
+git rebase
+git merge --ff feature/MYBRANCH
+	fast forward macht (wenn es möglich ist) keinen merge commit
+
+merge commit eher bei längeren größeren Änderungen
+
+git rebase [<branch>]
+	ein rebase des übergebenen Branches durchführen
+	d.h. auf dem angegebenen Branch 
+		du nimmst deine commits
+		und ziehst sie auf einen neuen Anfang um
+	d.h. master hat sich weiterentwickelt
+	und du kommst danach
+	der Zeiger deines ersten Commits wird weitergeschoben
+
+git log --graph --decorate --abbrev-commit --all --pretty=oneline
+	hübsche konsolen history
+
+git show [commitHash]
+	Änderungen eines commits anzeigen
+
+NOTES
+
+Ein branch hilft beim Kontext-switchen, wenn solche absehbar nicht notwendig sind ist es auch der branch nicht
+Ein Branch hilft wenn längere Arbeit mit mehreren commits ansteht, wenn nur ein commit rauskommt ...
+
+
+EINEN FEATURE BRANCH REINTEGRIEREN
+
+git branch
+	damit ist schon mal eine Liste der branches in der Konsole
+git checkout master
+	hier wollen wir hin mergen
+git fetch
+	mach dich mal aktuell
+git rebase
+	pack die eigenen Sachen hinter allen changes
+git merge --squash feature/LD-96--liquibase-schema--files-moved
+	alle changes des feature Branches in einen commit packen
+git status
+	jetzt sollten die changes des Branches geadded sein
+git commit -m "[LD-96] Schema-Migration für Etikett und KommAuftrag"
+	commiten
+git push
+	der master bekommt die changes
+git push origin :feature/LD-96--liquibase-schema--files-moved
+	den Branch im Repo löschen
+git push origin :feature/LD-96--liquibase-schema 
+	den Branch im Repo löschen
+git branch -D feature/LD-96--liquibase-schema--files-moved
+	den Branch lokal löschen
+git branch -D feature/LD-96--liquibase-schema
+	den Branch lokal löschen
+
+
+MISC
+Branches mußt Du aktiv löschen. Ein merge löscht den Branch nicht.
+Du machst es mit 
+git push origin :/feature/module
+
+Einen lokalen branch erzeugen und hin wechseln
+git checkout -b foo
+
+Ist mir völlig egal, setze den Zeiger auf diesen commit:
+git reset --hard [commitid]
+
+
+git branch [branchname] [andererBranchName]
+git branch [branchname] [aufWasDasZeigenSoll]
+bit branch [branchname] [commitHash]
+
+git rebase abort
+	doch nicht machen
+
+auf neuen branch cherrypicken:
+
+git cherry-pick [commithash]
+
+bei Konflikten: continue oder abort
+
+changes window -> context menu -> get
+	eine geänderte datei in den Stand kopieren
+
+git rebase -i [vonWoStartpunkt]
+
+nicht tun:
+git push force master irgend einen alten Stand
+
+wer hat es geändert?
+	git blame
+	annotate
+
+spezifische Datei Änderungen nach Branches:
+	in intelliJ -> git fenster -> eingrenzen auf Pfad
+
+wer hat es geändert?
+	git blame
+	annotate
+
+spezifische Datei Änderungen nach Branches:
+	in intelliJ -> git fenster -> eingrenzen auf Pfad
+		paths -> select in tree
+
+DIE CHANGES EINES BRANCHES AUF EINEN ANDEREN SELEKTIV ÜBERNEHMEN
+
+git fetch
+	alles aktualisieren
+git status
+	auf Änderungen überprüfen und ggf. commits abschließen / Änderungen verwerfen
+git checkout master
+git pull
+git status
+git fetch
+git status
+	wir sind jetzt up to date
+
+git push --force-with-lease
+
+DIE COMMITS EINES REPOSITORIES AUF EIN ANDERES ÜBErNEHMEN
+
+Das source repo als remote hinzufügen
+die commits sind jetzt sichtbar
+dann cherrypicken
+
