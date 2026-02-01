@@ -4,4 +4,5 @@
 .DS_Store
 local.properties
 /app/release/
+/app/build/
 /gradle/
