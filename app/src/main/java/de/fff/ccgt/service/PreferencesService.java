@@ -86,7 +86,7 @@ public class PreferencesService {
         setCalibrationFreq(getCalibrationFreqFor(index));
     }
 
-        public int getSampleRate() {
+    public int getSampleRate() {
         String samplerate = sharedPreferences.getString("samplerate", "");
         if(!samplerate.isEmpty()) {
             logValidSampleRates();

@@ -7,24 +7,20 @@ public class ConsoleBuffer {
     private final static int ROWS = 20;
     private final String[] rowHistory;
     private final static String firstLine = "-    .    .    .    *    .    .    .    +\n";
-    private double tunerLastCentsValue;
 
     public ConsoleBuffer() {
-        tunerLastCentsValue = 0;
         rowHistory = new String[ROWS];
-        initHistory();
+        Arrays.fill(rowHistory, "");
     }
 
-    public String getNewContents(double centsDeviation) {
-        pushRow(centsDeviation);
-        return addHeader();
+    public String push(double centsDeviation) {
+        if (rowHistory.length - 1 >= 0)
+            System.arraycopy(rowHistory, 0, rowHistory, 1, rowHistory.length - 1);
+        rowHistory[0] = asRow(centsDeviation);
+        return withHeader();
     }
 
-    private void pushRow(double centsDeviation) {
-        putToHistory(getHistoryRow(twoPointMovingAverageFilter(centsDeviation)));
-    }
-
-    private String addHeader() {
+    private String withHeader() {
         StringBuffer output = new StringBuffer();
         output.append(firstLine);
         output.append("\n");
@@ -35,18 +31,7 @@ public class ConsoleBuffer {
         return output.toString();
     }
 
-    private void putToHistory(String centsString){
-        if (rowHistory.length - 1 >= 0)
-            System.arraycopy(rowHistory, 0, rowHistory, 1, rowHistory.length - 1);
-        rowHistory[0] = centsString;
-    }
-
-    private void initHistory(){
-        Arrays.fill(rowHistory, "");
-    }
-
-    private String getHistoryRow(double cents) {
-
+    private String asRow(double cents) {
         int approximateCents = (int) cents;
         StringBuilder tmpstr = new StringBuilder("                                         \n");
 
@@ -76,12 +61,6 @@ public class ConsoleBuffer {
             tmpstr.setCharAt(20, '|');
         }
         return tmpstr.toString();
-    }
-
-    private double twoPointMovingAverageFilter(double actualCents) {
-        double output = (actualCents + tunerLastCentsValue) / 2;
-        tunerLastCentsValue = actualCents;
-        return output;
     }
 
 }
