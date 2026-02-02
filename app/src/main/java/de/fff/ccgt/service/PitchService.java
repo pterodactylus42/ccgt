@@ -1,15 +1,20 @@
 package de.fff.ccgt.service;
 
-import android.util.Log;
+import android.graphics.Color;
 
-import de.fff.ccgt.activity.MainActivity;
+import be.tarsos.dsp.pitch.PitchDetectionResult;
 
 public class PitchService {
 
     private final static String TAG = PitchService.class.getSimpleName();
     private final static String[] PITCHCLASSES = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
+    private final static String NO_PITCH = "-";
 
-    public String getNearestPitchClass(double freq, double referenceFrequency) {
+    public String getNearestPitchClass(PitchDetectionResult pitchDetectionResult, double referenceFrequency) {
+        return pitchDetectionResult.isPitched() ? getNearestPitchClass(pitchDetectionResult.getPitch(), referenceFrequency) : NO_PITCH;
+    }
+
+        public String getNearestPitchClass(double freq, double referenceFrequency) {
 
         double distance = getDistance(freq, referenceFrequency);
         int integerDistance = (int) distance;
@@ -72,7 +77,7 @@ public class PitchService {
         return Integer.toString((int) ((distance / 12) + 4));
     }
 
-    public int distanceErrorOctetValue(double freq, double referenceFrequency) {
+    protected int distanceErrorOctetValue(double freq, double referenceFrequency) {
 
         double distance = getDistance(freq, referenceFrequency);
         double distanceError = Math.abs(distance - ((int) distance));
@@ -83,6 +88,11 @@ public class PitchService {
             return (int) (250 * (1 - distanceError));
         }
 
+    }
+
+    public int color(PitchDetectionResult pitchDetectionResult, int referenceFreq) {
+        int octetValue = distanceErrorOctetValue(pitchDetectionResult.getPitch(), referenceFreq);
+        return pitchDetectionResult.isPitched() ? Color.rgb(octetValue, 250 - octetValue, octetValue) : Color.WHITE;
     }
 
 }

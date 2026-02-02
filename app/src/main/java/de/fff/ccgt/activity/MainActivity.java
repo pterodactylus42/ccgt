@@ -30,7 +30,7 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
-import de.fff.ccgt.service.ConsoleBuffer;
+import de.fff.ccgt.view.ConsoleBuffer;
 import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.service.PreferencesService;
 import de.fff.ccgt.view.SpectrogramView;
@@ -93,13 +93,16 @@ public class MainActivity extends AppCompatActivity {
         audioService = new AudioService(this.getApplicationContext());
         consoleBuffer = new ConsoleBuffer();
 
-        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+        audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), preferencesService.getAlgorithm(), getPitchDetectionHandler(), getFftProcessor());
 
         initCalibration(true);
         startDisplay();
         handlePreferences();
 
     }
+
+
+
     private void handlePreferences() {
         if(preferencesService.isKeepScreenOn()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -173,17 +176,17 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.yin:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "Yin selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.yin_fft:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "Yin FFT selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.mpm:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "MPM selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.settings:
@@ -217,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         initCalibration(false);
-        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+        audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), preferencesService.getAlgorithm(), getPitchDetectionHandler(), getFftProcessor());
         handlePreferences();
     }
 
@@ -233,22 +236,15 @@ public class MainActivity extends AppCompatActivity {
     public PitchDetectionHandler getPitchDetectionHandler() {
         @SuppressLint("DefaultLocale")
         PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
-            pitchInHz = pitchDetectionResult.getPitch();
             int referenceFrequency = preferencesService.getCalibrationFreq();
             runOnUiThread(() -> {
-                if (pitchDetectionResult.isPitched()) {
-                    //make it fade to green
-                    int octetValue = pitchService.distanceErrorOctetValue(pitchInHz, referenceFrequency);
-                    pitchNameTV.setTextColor(Color.rgb(octetValue, 250 - octetValue, octetValue));
-                    pitchNameTV.setText(pitchService.getNearestPitchClass(pitchInHz, referenceFrequency));
-                    centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
-                } else {
-                    centsDeviation = Double.NaN;
-                    pitchNameTV.setTextColor(Color.WHITE);
-                    pitchNameTV.setText("-");
-                }
-                octTV.setText(pitchService.getOctave(pitchInHz, referenceFrequency));
-                freqTV.setText(String.format("%.02f", pitchInHz));
+                pitchNameTV.setTextColor(pitchService.color(pitchDetectionResult, referenceFrequency));
+                pitchNameTV.setText(pitchService.getNearestPitchClass(pitchDetectionResult, referenceFrequency));
+                octTV.setText(pitchService.getOctave(pitchDetectionResult.getPitch(), referenceFrequency));
+                freqTV.setText(String.format("%.02f", pitchDetectionResult.getPitch()));
+
+                // TODO: 02.02.26 remove dependency on centsDeviation and pitchInHz fields
+                centsDeviation = pitchDetectionResult.isPitched() ? pitchService.getCentsDeviation(pitchDetectionResult.getPitch(), referenceFrequency) : Double.NaN;
             });
         };
 
@@ -259,19 +255,16 @@ public class MainActivity extends AppCompatActivity {
         AudioProcessor fftProcessor = new AudioProcessor() {
             int buffersize = preferencesService.getBufferSize();
             final FFT fft = new FFT(buffersize);
-            final float[] amplitudes = new float[buffersize * 2];
+            float[] amplitudes = new float[buffersize / 2];
 
             @Override
             public boolean process(AudioEvent audioEvent) {
-                float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-                float[] transformBuffer = new float[buffersize * 4];
-                System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
-                fft.forwardTransform(transformBuffer);
+                float[] audioFloatBuffer = audioEvent.getFloatBuffer().clone();
+                fft.forwardTransform(audioFloatBuffer);
                 //modulus: absolute value of complex fourier coefficient aka magnitude
-                fft.modulus(transformBuffer, amplitudes);
-                runOnUiThread(() -> {
+                fft.modulus(audioFloatBuffer, amplitudes);
+                runOnUiThread(() -> { // TODO: 02.02.26 pitchInHz currently not provided
                     spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
-                    spectrogramView.invalidate();
                 });
                 return true;
             }

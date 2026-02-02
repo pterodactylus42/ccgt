@@ -1,22 +1,16 @@
 package de.fff.ccgt.service;
 
 import android.content.Context;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.util.Log;
 import android.widget.Toast;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.filters.HighPass;
-import be.tarsos.dsp.filters.LowPassFS;
 import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
 public class AudioService {
-
-    private final PreferencesService preferencesService;
 
     private final static String TAG = AudioService.class.getSimpleName();
     private final Context context;
@@ -25,37 +19,28 @@ public class AudioService {
 
     public AudioService(Context context) {
         this.context = context;
-        preferencesService = new PreferencesService(context);
     }
 
-    public void startAudio(PitchDetectionHandler pitchDetectionHandler, AudioProcessor fftProcessor) {
-        startAudio(preferencesService.getAlgorithm(), pitchDetectionHandler, fftProcessor);
-    }
-
-    public void startAudio(PitchProcessor.PitchEstimationAlgorithm pitchAlgorithm, PitchDetectionHandler pitchDetectionHandler, AudioProcessor fftProcessor) {
+    public void startAudio(final int samplerate, final int buffersize, final PitchProcessor.PitchEstimationAlgorithm pitchAlgorithm, final PitchDetectionHandler pitchDetectionHandler, final AudioProcessor fftProcessor) {
         if(audioDispatcher == null) {
-            int samplerate = preferencesService.getSampleRate();
-            int buffersize = preferencesService.getBufferSize();
             try {
                 Log.d(TAG,"startAudio: trying with samplerate " + samplerate + " buffersize " + buffersize);
-                audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(samplerate, buffersize, getOverlap());
+                // TODO: 02.02.26 add method for hardcoded overlap
+                audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(samplerate, buffersize, buffersize / 4 * 3);
                 synchronized (this) {
-                    audioDispatcher.addAudioProcessor(new LowPassFS(preferencesService.getLowpassFreq(), samplerate));
-                    audioDispatcher.addAudioProcessor(new HighPass(preferencesService.getHighpassFreq(), samplerate));
-                    AudioProcessor pitchProcessor = new PitchProcessor((PitchProcessor.PitchEstimationAlgorithm) pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
+                    // TODO: 02.02.26 do filtering in own component
+//                    audioDispatcher.addAudioProcessor(new LowPassFS(preferencesService.getLowpassFreq(), samplerate));
+//                    audioDispatcher.addAudioProcessor(new HighPass(preferencesService.getHighpassFreq(), samplerate));
+                    AudioProcessor pitchProcessor = new PitchProcessor(pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
                     audioDispatcher.addAudioProcessor(pitchProcessor);
                     audioDispatcher.addAudioProcessor(fftProcessor);
                     new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
                 }
-                Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize + " overlap " + getOverlap());
+                Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize );
             } catch (IllegalArgumentException e) {
                 Toast.makeText(context, "Failed to start Audio: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
         }
-    }
-
-    private int getOverlap() {
-        return (preferencesService.getBufferSize()/4)*3;
     }
 
     public void stopAudio() {

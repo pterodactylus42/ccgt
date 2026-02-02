@@ -58,6 +58,7 @@ public class SpectrogramView extends View {
     public void feedSpectrogramView(double actualPitch, float[] buffer) {
         pitch = actualPitch;
         inBuffer = buffer;
+        invalidate();
     }
 
     /*
