@@ -8,7 +8,6 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import be.tarsos.dsp.pitch.PitchProcessor;
@@ -21,6 +20,7 @@ public class PreferencesService {
     private final static int FAST_DISPLAY = 127;
     private final static int LOWPASS_FREQ = 3000;
     private final static int HIGHPASS_FREQ = 70;
+    private final static int[] SAMPLERATES = {8000, 11025, 16000, 22050, 44100, 48000, 96000};
 
     private List<Integer> referenceFrequencies;
     private final SharedPreferences sharedPreferences;
@@ -150,11 +150,11 @@ public class PreferencesService {
     }
 
     private void logValidSampleRates() {
-        for(int rate : new int[] {8000, 11025, 16000, 22050, 44100, 48000, 96000}) {
+        for(int rate : SAMPLERATES) {
             //Returns: ERROR_BAD_VALUE if the recording parameters are not supported by the hardware, [...]
             int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
             if(bufferSize > 0) {
-                Log.d(TAG, "getValidSampleRates: rate " + rate + " supported");
+                Log.d(TAG, "logValidSampleRates: rate " + rate + " supported");
             }
         }
     }

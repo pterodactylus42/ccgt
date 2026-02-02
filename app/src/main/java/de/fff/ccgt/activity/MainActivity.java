@@ -93,13 +93,16 @@ public class MainActivity extends AppCompatActivity {
         audioService = new AudioService(this.getApplicationContext());
         consoleBuffer = new ConsoleBuffer();
 
-        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+        audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), preferencesService.getAlgorithm(), getPitchDetectionHandler(), getFftProcessor());
 
         initCalibration(true);
         startDisplay();
         handlePreferences();
 
     }
+
+
+
     private void handlePreferences() {
         if(preferencesService.isKeepScreenOn()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -173,17 +176,17 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.yin:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "Yin selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.yin_fft:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "Yin FFT selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.mpm:
                 audioService.stopAudio();
-                audioService.startAudio(PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
+                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
                 Toast.makeText(this, "MPM selected, preferences unchanged", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.settings:
@@ -217,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         initCalibration(false);
-        audioService.startAudio(getPitchDetectionHandler(), getFftProcessor());
+        audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), preferencesService.getAlgorithm(), getPitchDetectionHandler(), getFftProcessor());
         handlePreferences();
     }
 
