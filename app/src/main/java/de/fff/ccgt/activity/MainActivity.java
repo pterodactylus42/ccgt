@@ -236,22 +236,15 @@ public class MainActivity extends AppCompatActivity {
     public PitchDetectionHandler getPitchDetectionHandler() {
         @SuppressLint("DefaultLocale")
         PitchDetectionHandler pitchDetectionHandler = (pitchDetectionResult, audioEvent) -> {
-            pitchInHz = pitchDetectionResult.getPitch();
             int referenceFrequency = preferencesService.getCalibrationFreq();
             runOnUiThread(() -> {
-                if (pitchDetectionResult.isPitched()) {
-                    //make it fade to green
-                    int octetValue = pitchService.distanceErrorOctetValue(pitchInHz, referenceFrequency);
-                    pitchNameTV.setTextColor(Color.rgb(octetValue, 250 - octetValue, octetValue));
-                    pitchNameTV.setText(pitchService.getNearestPitchClass(pitchInHz, referenceFrequency));
-                    centsDeviation = pitchService.getCentsDeviation(pitchInHz, referenceFrequency);
-                } else {
-                    centsDeviation = Double.NaN;
-                    pitchNameTV.setTextColor(Color.WHITE);
-                    pitchNameTV.setText("-");
-                }
-                octTV.setText(pitchService.getOctave(pitchInHz, referenceFrequency));
-                freqTV.setText(String.format("%.02f", pitchInHz));
+                pitchNameTV.setTextColor(pitchService.color(pitchDetectionResult, referenceFrequency));
+                pitchNameTV.setText(pitchService.getNearestPitchClass(pitchDetectionResult, referenceFrequency));
+                octTV.setText(pitchService.getOctave(pitchDetectionResult.getPitch(), referenceFrequency));
+                freqTV.setText(String.format("%.02f", pitchDetectionResult.getPitch()));
+
+                // TODO: 02.02.26 remove dependency on centsDeviation and pitchInHz fields
+                centsDeviation = pitchDetectionResult.isPitched() ? pitchService.getCentsDeviation(pitchDetectionResult.getPitch(), referenceFrequency) : Double.NaN;
             });
         };
 
