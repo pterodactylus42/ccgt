@@ -255,19 +255,16 @@ public class MainActivity extends AppCompatActivity {
         AudioProcessor fftProcessor = new AudioProcessor() {
             int buffersize = preferencesService.getBufferSize();
             final FFT fft = new FFT(buffersize);
-            final float[] amplitudes = new float[buffersize * 2];
+            float[] amplitudes = new float[buffersize / 2];
 
             @Override
             public boolean process(AudioEvent audioEvent) {
-                float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-                float[] transformBuffer = new float[buffersize * 4];
-                System.arraycopy(audioFloatBuffer, 0, transformBuffer, 0, audioFloatBuffer.length);
-                fft.forwardTransform(transformBuffer);
+                float[] audioFloatBuffer = audioEvent.getFloatBuffer().clone();
+                fft.forwardTransform(audioFloatBuffer);
                 //modulus: absolute value of complex fourier coefficient aka magnitude
-                fft.modulus(transformBuffer, amplitudes);
-                runOnUiThread(() -> {
+                fft.modulus(audioFloatBuffer, amplitudes);
+                runOnUiThread(() -> { // TODO: 02.02.26 pitchInHz currently not provided
                     spectrogramView.feedSpectrogramView(pitchInHz, amplitudes);
-                    spectrogramView.invalidate();
                 });
                 return true;
             }
