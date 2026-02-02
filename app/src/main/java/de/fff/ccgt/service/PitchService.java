@@ -1,9 +1,5 @@
 package de.fff.ccgt.service;
 
-import android.util.Log;
-
-import de.fff.ccgt.activity.MainActivity;
-
 public class PitchService {
 
     private final static String TAG = PitchService.class.getSimpleName();

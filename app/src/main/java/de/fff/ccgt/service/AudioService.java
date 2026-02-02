@@ -1,8 +1,6 @@
 package de.fff.ccgt.service;
 
 import android.content.Context;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.util.Log;
 import android.widget.Toast;
 

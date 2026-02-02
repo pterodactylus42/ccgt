@@ -1,6 +1,5 @@
-package de.fff.ccgt.service;
+package de.fff.ccgt.view;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

@@ -30,7 +30,7 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import de.fff.ccgt.R;
 import de.fff.ccgt.service.AudioService;
-import de.fff.ccgt.service.ConsoleBuffer;
+import de.fff.ccgt.view.ConsoleBuffer;
 import de.fff.ccgt.service.PitchService;
 import de.fff.ccgt.service.PreferencesService;
 import de.fff.ccgt.view.SpectrogramView;

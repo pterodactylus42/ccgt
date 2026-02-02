@@ -1,4 +1,4 @@
-package de.fff.ccgt.service;
+package de.fff.ccgt.view;
 
 import java.util.Arrays;
 
