@@ -36,13 +36,6 @@ android {
 
 dependencies {
 
-    /*
-        this app uses the latest Version of TarsosDSP available.
-        unfortunately the android specific io libs are missing
-        on maven central. additionally, for compatibility reasons
-        a native android variant is included here as sources.
-     */
-
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
