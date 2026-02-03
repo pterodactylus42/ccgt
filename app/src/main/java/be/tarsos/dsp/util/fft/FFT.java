@@ -1,37 +1,35 @@
 /*
-*      _______                       _____   _____ _____  
-*     |__   __|                     |  __ \ / ____|  __ \ 
-*        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
-*        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/ 
-*        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |     
-*        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|     
-*                                                         
-* -------------------------------------------------------------
-*
-* TarsosDSP is developed by Joren Six at IPEM, University Ghent
-*  
-* -------------------------------------------------------------
-*
-*  Info: http://0110.be/tag/TarsosDSP
-*  Github: https://github.com/JorenSix/TarsosDSP
-*  Releases: http://0110.be/releases/TarsosDSP/
-*  
-*  TarsosDSP includes modified source code by various authors,
-*  for credits and info, see README.
-* 
-*/
+ *      _______                       _____   _____ _____
+ *     |__   __|                     |  __ \ / ____|  __ \
+ *        | | __ _ _ __ ___  ___  ___| |  | | (___ | |__) |
+ *        | |/ _` | '__/ __|/ _ \/ __| |  | |\___ \|  ___/
+ *        | | (_| | |  \__ \ (_) \__ \ |__| |____) | |
+ *        |_|\__,_|_|  |___/\___/|___/_____/|_____/|_|
+ *
+ * -------------------------------------------------------------
+ *
+ * TarsosDSP is developed by Joren Six at IPEM, University Ghent
+ *
+ * -------------------------------------------------------------
+ *
+ *  Info: http://0110.be/tag/TarsosDSP
+ *  Github: https://github.com/JorenSix/TarsosDSP
+ *  Releases: http://0110.be/releases/TarsosDSP/
+ *
+ *  TarsosDSP includes modified source code by various authors,
+ *  for credits and info, see README.
+ *
+ */
 
 
 package be.tarsos.dsp.util.fft;
 
 
-import de.fff.ccgt.BuildConfig;
-
 /**
  * Wrapper for calling a hopefully Fast Fourier transform. Makes it easy to
  * switch FFT algorithm with minimal overhead.
  * Support for window functions is also present.
- * 
+ *
  * @author Joren Six
  */
 public final class FFT {
@@ -42,19 +40,19 @@ public final class FFT {
 	private final FloatFFT fft;
 	private final WindowFunction windowFunction;
 	private final int fftSize;
-	private final float[] window; 
+	private final float[] window;
 
 	public FFT(final int size) {
 		this(size,null);
 	}
-	
 
-	
+
+
 	/**
-	 * Create a new fft of the specified size. Apply the specified window on the samples before a forward transform. 
+	 * Create a new fft of the specified size. Apply the specified window on the samples before a forward transform.
 	 * arning: the window is not applied in reverse when a backwards transform is requested.
 	 * @param size The size of the fft.
-	 * @param windowFunction Apply the specified window on the samples before a forward transform. 
+	 * @param windowFunction Apply the specified window on the samples before a forward transform.
 	 * arning: the window is not applied in reverse when a backwards transform is requested.
 	 */
 	public FFT(final int size, final WindowFunction windowFunction){
@@ -64,12 +62,12 @@ public final class FFT {
 		if(windowFunction==null)
 			window = null;
 		else
-		   window = windowFunction.generateCurve(size);
+			window = windowFunction.generateCurve(size);
 	}
 
 	/**
 	 * Computes forward DFT.
-	 * 
+	 *
 	 * @param data
 	 *            data to transform.
 	 */
@@ -82,7 +80,7 @@ public final class FFT {
 		}
 		fft.realForward(data);
 	}
-	
+
 	public void complexForwardTransform(final float[] data) {
 		if(windowFunction!=null){
 			for(int i = 0 ; i < data.length ; i++){
@@ -106,7 +104,7 @@ public final class FFT {
 	public double binToHz(final int binIndex, final float sampleRate) {
 		return binIndex * sampleRate / (double) fftSize;
 	}
-	
+
 	public int size(){
 		return fftSize;
 	}
@@ -115,7 +113,7 @@ public final class FFT {
 	 * Returns the modulus of the element at index bufferCount. The modulus,
 	 * magnitude or absolute value is (a²+b²) ^ 0.5 with a being the real part
 	 * and b the imaginary part of a complex number.
-	 * 
+	 *
 	 * @param data
 	 *            The FFT transformed data.
 	 * @param index
@@ -133,27 +131,24 @@ public final class FFT {
 	/**
 	 * Calculates the the modulus for each element in data and stores the result
 	 * in amplitudes.
-	 * 
+	 *
 	 * @param data
 	 *            The input data.
 	 * @param amplitudes
 	 *            The output modulus info or amplitude.
 	 */
 	public void modulus(final float[] data, final float[] amplitudes) {
-		//another assertion less....
-		if (BuildConfig.DEBUG && data.length / 2 != amplitudes.length) {
-			throw new AssertionError("Assertion failed");
-		}
+		assert data.length / 2 == amplitudes.length;
 		for (int i = 0; i < amplitudes.length; i++) {
 			amplitudes[i] = modulus(data, i);
 		}
 	}
-	
+
 	/**
 	 * Computes an FFT and converts the results to polar coordinates (power and
 	 * phase). Both the power and phase arrays must be the same length, data
 	 * should be double the length.
-	 * 
+	 *
 	 * @param data
 	 *            The input audio signal.
 	 * @param power
@@ -162,22 +157,18 @@ public final class FFT {
 	 *            The phase of the data
 	 */
 	public void powerPhaseFFT(float[] data,float[] power, float[] phase) {
-		if (BuildConfig.DEBUG && data.length / 2 != power.length) {
-			throw new AssertionError("Assertion failed");
-		}
-		if (BuildConfig.DEBUG && data.length / 2 != phase.length) {
-			throw new AssertionError("Assertion failed");
-		}
-		if (windowFunction != null) {
+		assert data.length / 2 == power.length;
+		assert data.length / 2 == phase.length;
+		if(windowFunction!=null){
 			windowFunction.apply(data);
 		}
 		fft.realForward(data);
 		powerAndPhaseFromFFT(data, power, phase);
 	}
-	
-	
+
+
 	/**
-	 * Returns magnitude (or power) and phase for the FFT transformed data. 
+	 * Returns magnitude (or power) and phase for the FFT transformed data.
 	 * @param data The FFT transformed data.
 	 * @param power The array where the magnitudes or powers are going to be stored. It is half the length of data (FFT size).
 	 * @param phase The array where the phases are going to be stored. It is half the length of data (FFT size).
@@ -192,12 +183,12 @@ public final class FFT {
 			phase[i] = (float) Math.atan2(data[imgIndex], data[realIndex]);
 		}
 	}
-	
+
 	public void powerPhaseFFTBeatRootOnset(float[] data,float[] power, float[] phase) {
 		powerPhaseFFT(data, power, phase);
 		power[0] = (float) Math.sqrt(data[0] * data[0] + data[1] * data[1]);
 	}
-	
+
 	/**
 	 * Multiplies to arrays containing imaginary numbers. The data in the first argument
 	 * is modified! The real part is stored at <code>2*i</code>, the imaginary part <code>2*i+i</code>
@@ -205,21 +196,19 @@ public final class FFT {
 	 * @param other The array with imaginary numbers that is not modified.
 	 * Data and other need to be the same length.
 	 */
-	public void multiply(float[] data, float[] other) {
-		if (BuildConfig.DEBUG && data.length != other.length) {
-			throw new AssertionError("Assertion failed");
-		}
-		if (data.length != other.length) {
+	public void multiply(float[] data, float[] other){
+		assert data.length == other.length;
+		if(data.length!=other.length){
 			throw new IllegalArgumentException("Both arrays with imaginary numbers shouldb e of equal length");
 		}
-		for (int i = 1; i < data.length - 1; i += 2) {
+		for (int i = 1; i < data.length-1; i+=2) {
 			int realIndex = i;
 			int imgIndex = i + 1;
 			float tempReal = data[realIndex] * other[realIndex] + -1 * data[imgIndex] * other[imgIndex];
 			float tempImg = data[realIndex] * other[imgIndex] + data[imgIndex] * other[realIndex];
 			data[realIndex] = tempReal;
 			data[imgIndex] = tempImg;
-			//fix by perfecthu 
+			//fix by perfecthu
 			//data[realIndex] = data[realIndex] * other[realIndex] + -1 * data[imgIndex] * other[imgIndex];
 			//data[imgIndex] = data[realIndex] * other[imgIndex] + data[imgIndex] * other[realIndex];
 		}
