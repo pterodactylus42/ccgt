@@ -131,7 +131,7 @@
         android:id="@+id/calibrationSeekBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:max="6"
+        android:max="7"
         android:progress="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
