@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="frequencyItems">
+        <item name="432 Hz">432 Hz</item>
         <item name="437 Hz">437 Hz</item>
         <item name="438 Hz">438 Hz</item>
         <item name="439 Hz">439 Hz</item>

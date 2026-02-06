@@ -12,6 +12,7 @@
     </string-array>
 
     <string-array name="calibration_entries">
+        <item>432</item>
         <item>437</item>
         <item>438</item>
         <item>439</item>
@@ -21,13 +22,14 @@
         <item>443</item>
     </string-array>
     <string-array name="calibration_values">
-        <item value="0">437</item>
-        <item value="1">438</item>
-        <item value="2">439</item>
-        <item value="3">440</item>
-        <item value="4">441</item>
-        <item value="5">442</item>
-        <item value="6">443</item>
+        <item value="0">432</item>
+        <item value="1">437</item>
+        <item value="2">438</item>
+        <item value="3">439</item>
+        <item value="4">440</item>
+        <item value="5">441</item>
+        <item value="6">442</item>
+        <item value="7">443</item>
     </string-array>
 
     <string-array name="samplerate_entries">
