@@ -22,6 +22,10 @@ public class AudioService {
     }
 
     public void startAudio(final int samplerate, final int buffersize, final PitchProcessor.PitchEstimationAlgorithm pitchAlgorithm, final PitchDetectionHandler pitchDetectionHandler, final AudioProcessor fftProcessor) {
+        // TODO: 07.02.26 add audio engine profiling for MPM usage
+        if(PitchProcessor.PitchEstimationAlgorithm.MPM.equals(pitchAlgorithm)) {
+            Toast.makeText(context, "Warning: MPM does not work with higher samplerates.", Toast.LENGTH_LONG).show();
+        }
         if(audioDispatcher == null) {
             try {
                 Log.d(TAG,"startAudio: trying with samplerate " + samplerate + " buffersize " + buffersize);

@@ -174,21 +174,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.yin:
-                audioService.stopAudio();
-                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.YIN, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "Yin selected, preferences unchanged", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.yin_fft:
-                audioService.stopAudio();
-                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "Yin FFT selected, preferences unchanged", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.mpm:
-                audioService.stopAudio();
-                audioService.startAudio(preferencesService.getSampleRate(), preferencesService.getBufferSize(), PitchProcessor.PitchEstimationAlgorithm.MPM, getPitchDetectionHandler(), getFftProcessor());
-                Toast.makeText(this, "MPM selected, preferences unchanged", Toast.LENGTH_SHORT).show();
-                return true;
             case R.id.settings:
                 startActivity(new Intent(this,SettingsActivity.class));
             default:
