@@ -37,7 +37,7 @@ public class AudioService {
                     AudioProcessor pitchProcessor = new PitchProcessor(pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
                     audioDispatcher.addAudioProcessor(pitchProcessor);
                     audioDispatcher.addAudioProcessor(fftProcessor);
-                    new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
+                    new Thread(audioDispatcher, "audioDispatcher thread").start();
                 }
                 Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize );
             } catch (IllegalArgumentException e) {
