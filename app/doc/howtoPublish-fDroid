@@ -3,6 +3,7 @@ SHORT version:
     clean up
     increment 	versionName
     and        	versionCode
+        in the build.gradle file of the app module
     commit
     create tag that matches the new versionName prepended with a "v"
     create release

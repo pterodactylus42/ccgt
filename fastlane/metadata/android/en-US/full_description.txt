@@ -1,6 +1,7 @@
 console chromatic guitar tuner helps getting musical instruments in tune.
 It is ad-free, straightforward and intuitive. Only a few MB of storage are needed.
-The reference frequency A4 can be chosen from 437 to 443 Hz.
+The reference frequency A4 can be chosen from 432 to 443 Hz.
 Audio driver, algorithm and some other things can be adjusted to your instrument in the settings.
 The deviation from the next correct pitch is show as flowing histogram and in the color of the pitch name.
 Additionally the octave can be shown.
+While the audio engine can be freely configured, some settings might cause your mobile to choke. If you get no readings, choose smaller buffersize and samplerate values.

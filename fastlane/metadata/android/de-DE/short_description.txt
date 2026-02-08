@@ -1,1 +1,1 @@
-console chromatic guitar tuner.
+console chromatic guitar tuner (Stimmgerät).
