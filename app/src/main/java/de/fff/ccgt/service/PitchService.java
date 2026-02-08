@@ -9,9 +9,10 @@ public class PitchService {
     private final static String TAG = PitchService.class.getSimpleName();
     private final static String[] PITCHCLASSES = { "C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B",  };
     private final static String NO_PITCH = "-";
+    private final static float PROBABILITY_THRESHOLD = 0.91f;
 
     public String getNearestPitchClass(PitchDetectionResult pitchDetectionResult, double referenceFrequency) {
-        return pitchDetectionResult.isPitched() ? getNearestPitchClass(pitchDetectionResult.getPitch(), referenceFrequency) : NO_PITCH;
+        return isPitched(pitchDetectionResult) ? getNearestPitchClass(pitchDetectionResult.getPitch(), referenceFrequency) : NO_PITCH;
     }
 
         public String getNearestPitchClass(double freq, double referenceFrequency) {
@@ -92,7 +93,11 @@ public class PitchService {
 
     public int color(PitchDetectionResult pitchDetectionResult, int referenceFreq) {
         int octetValue = distanceErrorOctetValue(pitchDetectionResult.getPitch(), referenceFreq);
-        return pitchDetectionResult.isPitched() ? Color.rgb(octetValue, 250 - octetValue, octetValue) : Color.WHITE;
+        return isPitched(pitchDetectionResult) ? Color.rgb(octetValue, 250 - octetValue, octetValue) : Color.WHITE;
+    }
+
+    public boolean isPitched(PitchDetectionResult pitchDetectionResult) {
+        return pitchDetectionResult.isPitched() && pitchDetectionResult.getProbability() > PROBABILITY_THRESHOLD;
     }
 
 }
