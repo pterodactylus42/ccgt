@@ -22,6 +22,9 @@ public class AudioService {
     }
 
     public void startAudio(final int samplerate, final int buffersize, final PitchProcessor.PitchEstimationAlgorithm pitchAlgorithm, final PitchDetectionHandler pitchDetectionHandler, final AudioProcessor fftProcessor) {
+        if(samplerate > 44100 || buffersize > 4096) {
+            Toast.makeText(context, "Reduce samplerate / buffersize if not working...", Toast.LENGTH_LONG).show();
+        }
         if(audioDispatcher == null) {
             try {
                 Log.d(TAG,"startAudio: trying with samplerate " + samplerate + " buffersize " + buffersize);
@@ -34,7 +37,7 @@ public class AudioService {
                     AudioProcessor pitchProcessor = new PitchProcessor(pitchAlgorithm, samplerate, buffersize, pitchDetectionHandler);
                     audioDispatcher.addAudioProcessor(pitchProcessor);
                     audioDispatcher.addAudioProcessor(fftProcessor);
-                    new Thread(audioDispatcher, "audioDispatcher adding new processors").start();
+                    new Thread(audioDispatcher, "audioDispatcher thread").start();
                 }
                 Log.d(TAG, "startAudio: algorithm " + pitchAlgorithm + " samplerate " + samplerate + " buffersize " + buffersize );
             } catch (IllegalArgumentException e) {

@@ -20,7 +20,6 @@ public class SpectrogramView extends View {
 
     private boolean isSpectrogramLogarithmic;
     private int samplerate;
-    private int position;
     private double pitch;
     private float[] inBuffer;
     private Paint pixelPaint;
@@ -50,7 +49,6 @@ public class SpectrogramView extends View {
         pixelPaint.setColor(Color.GRAY);
         pixelPaint.setAntiAlias(true);
         pixelPaint.setStyle(Paint.Style.STROKE);
-        position = 0;
         minFrequency = 20;
         maxFrequency = samplerate / 2;
     }
@@ -113,7 +111,7 @@ public class SpectrogramView extends View {
                     final int greyValue = (int) (Math.log1p(amplitudesOnXAxis[i] / maxAmplitude) / Math.log1p(1.0000001) * 255);
                     pixelPaint.setColor(Color.rgb(greyValue,greyValue,greyValue));
                 }
-                canvas.drawLine(i, position, i, position + 20, pixelPaint);
+                canvas.drawLine(i, 0, i, getHeight(), pixelPaint);
                 amplitudesOnXAxis[i] = 0.0f;
             }
 
@@ -121,11 +119,10 @@ public class SpectrogramView extends View {
             if(pitch != -1) {
                 int pitchIndex = frequencyToBin(pitch, canvas.getWidth());
                 pixelPaint.setColor(Color.RED);
-                canvas.drawLine(pitchIndex, position - 15, pitchIndex, position + 5, pixelPaint);
+                canvas.drawLine(pitchIndex, getHeight() / 2, pitchIndex, getHeight(), pixelPaint);
             }
 
             pixelPaint.setColor(Color.BLACK);
-            position = getHeight() / 2;
 
         }
     }
