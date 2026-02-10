@@ -29,7 +29,6 @@ import java.io.IOException;
 
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
-import de.fff.ccgt.BuildConfig;
 
 public class HaarWaveletFileWriter implements AudioProcessor {
 
@@ -59,7 +58,7 @@ public class HaarWaveletFileWriter implements AudioProcessor {
 			}
 		}
 
-		if (BuildConfig.DEBUG && zeroCounter != compression) {
+		if (zeroCounter != compression) {
 			throw new AssertionError("Assertion failed");
 		}
 

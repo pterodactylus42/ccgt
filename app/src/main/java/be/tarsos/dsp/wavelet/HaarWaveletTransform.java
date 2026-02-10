@@ -23,8 +23,6 @@
 
 package be.tarsos.dsp.wavelet;
 
-import de.fff.ccgt.BuildConfig;
-
 public class HaarWaveletTransform {
 		
 	private final boolean preserveEnergy;
@@ -46,7 +44,7 @@ public class HaarWaveletTransform {
 	 */
 	public void transform(float[] s) {
 		int m = s.length;
-		if (BuildConfig.DEBUG && !isPowerOfTwo(m)) {
+		if (!isPowerOfTwo(m)) {
 			throw new AssertionError("Assertion failed");
 		}
 		int n = log2(m);
@@ -76,7 +74,7 @@ public class HaarWaveletTransform {
      */
     public void inverseTransform(float[] data) {
 		int m = data.length;
-		if (BuildConfig.DEBUG && !isPowerOfTwo(m)) {
+		if (!isPowerOfTwo(m)) {
 			throw new AssertionError("Assertion failed");
 		}
 		int n = log2(m);
