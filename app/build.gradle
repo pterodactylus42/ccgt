@@ -14,8 +14,8 @@ android {
             Increment before you roll out a new release.
             You should create a tag with the new versionName prepended with a "v" before building the new release.
          */
-        versionCode 1152
-        versionName "1.52"
+        versionCode 1153
+        versionName "1.53"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
