@@ -173,12 +173,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.settings:
-                startActivity(new Intent(this,SettingsActivity.class));
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
         }
+        return super.onOptionsItemSelected(item);
     }
 
     private void startDisplay() {

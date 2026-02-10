@@ -29,8 +29,6 @@ package be.tarsos.dsp.pitch;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.fff.ccgt.BuildConfig;
-
 /**
  * <p>
  * Implementation of The McLeod Pitch Method (MPM). It is described in the
@@ -343,7 +341,6 @@ public final class McLeodPitchMethod implements PitchDetector {
 	 *   |
 	 * </pre>
 	 * 
-	 * @param nsdf
 	 *            The array to look for maximum values in. It should contain
 	 *            values between -1 and 1
 	 * @author Phillip McLeod
@@ -370,8 +367,8 @@ public final class McLeodPitchMethod implements PitchDetector {
 
 		while (pos < nsdf.length - 1) {
 			//some androids don't like assert statement :-(((
-			if (BuildConfig.DEBUG && nsdf[pos] < 0) {
-				throw new AssertionError("Assertion failed");
+			if (nsdf[pos] < 0) {
+				throw new AssertionError("nsdf[pos] < 0");
 			}
 			if (nsdf[pos] > nsdf[pos - 1] && nsdf[pos] >= nsdf[pos + 1]) {
 				if (curMaxPos == 0) {
