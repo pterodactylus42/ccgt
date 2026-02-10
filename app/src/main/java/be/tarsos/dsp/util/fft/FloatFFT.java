@@ -77,7 +77,7 @@ import be.tarsos.dsp.util.ConcurrencyUtils;
  * @author Piotr Wendykier (piotr.wendykier@gmail.com)
  * 
  */
-public strictfp class FloatFFT {
+public class FloatFFT {
 
     private static enum Plans {
         SPLIT_RADIX, MIXED_RADIX, BLUESTEIN

@@ -25,8 +25,6 @@
 package be.tarsos.dsp;
 
 
-import de.fff.ccgt.BuildConfig;
-
 /**
  *
  * <p>
@@ -228,7 +226,7 @@ public class WaveformSimilarityBasedOverlapAdd implements AudioProcessor {
 	@Override
 	public boolean process(AudioEvent audioEvent) {
 		float[] audioFloatBuffer = audioEvent.getFloatBuffer();
-		if (BuildConfig.DEBUG && audioFloatBuffer.length != getInputBufferSize()) {
+		if (audioFloatBuffer.length != getInputBufferSize()) {
 			throw new AssertionError("Assertion failed");
 		}
 
@@ -250,7 +248,7 @@ public class WaveformSimilarityBasedOverlapAdd implements AudioProcessor {
 		// processing sequence and so on
 		System.arraycopy(audioFloatBuffer, offset + sequenceLength + overlapLength, pMidBuffer, 0, overlapLength);
 
-		if (BuildConfig.DEBUG && outputFloatBuffer.length != getOutputBufferSize()) {
+		if (outputFloatBuffer.length != getOutputBufferSize()) {
 			throw new AssertionError("Assertion failed");
 		}
 
