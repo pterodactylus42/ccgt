@@ -18,6 +18,11 @@ android {
         versionName "1.53"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+            }
+        }
     }
 
     buildTypes {
@@ -31,6 +36,12 @@ android {
         targetCompatibility JavaVersion.VERSION_21
     }
     namespace 'de.fff.ccgt'
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
 
 
 }
