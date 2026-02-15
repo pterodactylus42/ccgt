@@ -3,6 +3,10 @@ plugins {
 }
 
 android {
+    buildFeatures {
+        prefab true
+    }
+
     compileSdkVersion 32
 
     defaultConfig {
@@ -21,6 +25,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags ''
+                arguments "-DANDROID_STL=c++_shared"
             }
         }
     }
