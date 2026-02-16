@@ -15,3 +15,5 @@
 //         System.loadLibrary("ccgt")
 //      }
 //    }
+
+// TODO - open audio stream to record things
