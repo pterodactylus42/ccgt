@@ -19,8 +19,8 @@ oboe::Result ccgt::open() {
     mErrorCallback = std::make_shared<MyErrorCallback>(this);
 
     AudioStreamBuilder builder;
-    oboe::Result result = builder.setSharingMode(oboe::SharingMode::Exclusive)
-//            ->setDirection(oboe::Direction::Input)
+    oboe::Result result = builder.setSharingMode(oboe::SharingMode::Shared)
+            ->setDirection(oboe::Direction::Input)
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
             ->setFormat(oboe::AudioFormat::Float)
             ->setChannelCount(kChannelCount)

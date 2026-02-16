@@ -15,14 +15,14 @@ extern "C" {
 
 using namespace oboe;
 
-static ccgt sPlayer;
+static ccgt audio;
 
 JNIEXPORT jint JNICALL Java_de_fff_ccgt_service_NativeAudioService_startAudioStreamNative(
         JNIEnv * /* env */, jclass /* clazz */) {
     __android_log_print(ANDROID_LOG_INFO, TAG, "%s", __func__);
-    Result result = sPlayer.open();
+    Result result = audio.open();
     if (result == Result::OK) {
-        result = sPlayer.start();
+        result = audio.start();
     }
     return (jint) result;
 }
@@ -30,8 +30,8 @@ JNIEXPORT jint JNICALL Java_de_fff_ccgt_service_NativeAudioService_startAudioStr
 JNIEXPORT jint JNICALL Java_de_fff_ccgt_service_NativeAudioService_stopAudioStreamNative(
         JNIEnv * /* env */, jclass /* clazz */) {
     __android_log_print(ANDROID_LOG_INFO, TAG, "%s", __func__);
-    Result result1 = sPlayer.stop();
-    Result result2 = sPlayer.close();
+    Result result1 = audio.stop();
+    Result result2 = audio.close();
     return (jint) ((result1 != Result::OK) ? result1 : result2);
 }
 #ifdef __cplusplus
