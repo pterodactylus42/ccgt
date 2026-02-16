@@ -12,9 +12,6 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 
 public class AudioService {
 
-    static {
-        System.loadLibrary("ccgt");
-    }
     private final static String TAG = AudioService.class.getSimpleName();
     private final Context context;
 

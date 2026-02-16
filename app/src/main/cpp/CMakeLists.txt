@@ -27,7 +27,7 @@ project("ccgt")
 # used in the AndroidManifest.xml file.
 add_library(${CMAKE_PROJECT_NAME} SHARED
     # List C/C++ source files with relative paths to this CMakeLists.txt.
-    ccgt.cpp)
+    ccgt.cpp jni-bridge.cpp)
 
 # Find the Oboe package
 find_package (oboe REQUIRED CONFIG)
