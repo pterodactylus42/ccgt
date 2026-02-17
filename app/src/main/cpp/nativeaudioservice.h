@@ -2,12 +2,12 @@
 // Created on 16.02.26.
 //
 
-#ifndef CCGT_CCGT_H
-#define CCGT_CCGT_H
+#ifndef CCGT_NATIVEAUDIOSERVICE_H
+#define CCGT_NATIVEAUDIOSERVICE_H
 
 #include <oboe/Oboe.h>
 
-class ccgt {
+class NativeAudioService {
 public:
 
     oboe::Result open();
@@ -31,7 +31,7 @@ private:
 
     class MyErrorCallback : public oboe::AudioStreamErrorCallback {
     public:
-        MyErrorCallback(ccgt *parent) : mParent(parent) {}
+        MyErrorCallback(NativeAudioService *parent) : mParent(parent) {}
 
         virtual ~MyErrorCallback() {
         }
@@ -39,7 +39,7 @@ private:
         void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error) override;
 
     private:
-        ccgt *mParent;
+        NativeAudioService *mParent;
     };
 
     std::shared_ptr<oboe::AudioStream> mStream;
@@ -50,4 +50,4 @@ private:
 };
 
 
-#endif //CCGT_CCGT_H
+#endif //CCGT_NATIVEAUDIOSERVICE_H

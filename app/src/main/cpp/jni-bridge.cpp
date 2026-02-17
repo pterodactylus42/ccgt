@@ -4,10 +4,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static const char *TAG = "ccgtJNI";
+static const char *TAG = "jni-bridge";
 
 #include <android/log.h>
-#include "ccgt.h"
+#include "nativeaudioservice.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +15,7 @@ extern "C" {
 
 using namespace oboe;
 
-static ccgt audio;
+static NativeAudioService audio;
 
 JNIEXPORT jint JNICALL Java_de_fff_ccgt_service_NativeAudioService_startAudioStreamNative(
         JNIEnv * /* env */, jclass /* clazz */) {

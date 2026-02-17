@@ -4,17 +4,18 @@
 // https://github.com/google/oboe/blob/main/docs/FullGuide.md
 // TODO - which layering of audio processing is sensible?
 // TODO - what comfort do you get from oboe?
+// TODO - translate aubio to C++
 
 #include <oboe/Oboe.h>
 //#include <stdlib.h>
 #include <android/log.h>
-#include "ccgt.h"
+#include "nativeaudioservice.h"
 
 using namespace oboe;
 
-static const char *TAG = "ccgt";
+static const char *TAG = "NativeAudioService";
 
-oboe::Result ccgt::open() {
+oboe::Result NativeAudioService::open() {
     mDataCallback = std::make_shared<MyDataCallback>();
     mErrorCallback = std::make_shared<MyErrorCallback>(this);
 
@@ -32,19 +33,19 @@ oboe::Result ccgt::open() {
     return result;
 }
 
-oboe::Result ccgt::start() {
+oboe::Result NativeAudioService::start() {
     return mStream->requestStart();
 }
 
-oboe::Result ccgt::stop() {
+oboe::Result NativeAudioService::stop() {
     return mStream->requestStop();
 }
 
-oboe::Result ccgt::close() {
+oboe::Result NativeAudioService::close() {
     return mStream->close();
 }
 
-DataCallbackResult ccgt::MyDataCallback::onAudioReady(
+DataCallbackResult NativeAudioService::MyDataCallback::onAudioReady(
         AudioStream *audioStream,
         void *audioData,
         int32_t numFrames) {
@@ -79,8 +80,8 @@ DataCallbackResult ccgt::MyDataCallback::onAudioReady(
 //    }
 //};
 
-void ccgt::MyErrorCallback::onErrorAfterClose(oboe::AudioStream *oboeStream,
-                                                          oboe::Result error) {
+void NativeAudioService::MyErrorCallback::onErrorAfterClose(oboe::AudioStream *oboeStream,
+                                                            oboe::Result error) {
     __android_log_print(ANDROID_LOG_INFO, TAG,
                         "%s() - error = %s",
                         __func__,
