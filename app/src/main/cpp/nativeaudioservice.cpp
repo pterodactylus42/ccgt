@@ -1,7 +1,4 @@
 // https://github.com/google/oboe/blob/main/docs/FullGuide.md
-// TODO - read audio non-blocking to have continuous readings
-// TODO - which layering of audio processing is sensible?
-// TODO - what comfort do you get from oboe?
 // TODO - translate aubio to C++
 // TODO - move data out of callback with atomic fifo
 
@@ -30,6 +27,7 @@ oboe::Result NativeAudioService::open() {
     return result;
 }
 
+//AudioStream::requestStart runs asynchronous
 oboe::Result NativeAudioService::start() {
     return mStream->requestStart();
 }
