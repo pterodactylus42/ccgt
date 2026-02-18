@@ -23,7 +23,7 @@ oboe::Result NativeAudioService::open() {
             ->setDirection(oboe::Direction::Input)
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
             ->setFormat(oboe::AudioFormat::Float)
-            ->setChannelCount(oboe::ChannelCount::Mono)
+            ->setChannelCount(kChannelCount)
             ->setDataCallback(mDataCallback)
             ->setErrorCallback(mErrorCallback)
             ->openStream(mStream);
@@ -49,7 +49,8 @@ DataCallbackResult NativeAudioService::MyDataCallback::onAudioReady(
 
     float *output = (float *) audioData;
 
-    for (int i = 0; i < numFrames; i++) {
+    int numSamples = numFrames * kChannelCount;
+    for (int i = 0; i < numSamples; i++) {
         *output++ = (float) ((drand48() - 0.5) * 0.6);
     }
     return oboe::DataCallbackResult::Continue;
