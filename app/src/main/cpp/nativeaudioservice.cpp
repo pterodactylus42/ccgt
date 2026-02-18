@@ -3,6 +3,7 @@
 // TODO - which layering of audio processing is sensible?
 // TODO - what comfort do you get from oboe?
 // TODO - translate aubio to C++
+// TODO - move data out of callback with atomic fifo
 
 #include <oboe/Oboe.h>
 #include <android/log.h>
@@ -16,16 +17,15 @@ oboe::Result NativeAudioService::open() {
     mDataCallback = std::make_shared<MyDataCallback>();
     mErrorCallback = std::make_shared<MyErrorCallback>(this);
 
+    // @see be.tarsos.dsp.io.android.AudioDispatcherFactory.fromDefaultMicrophone for stream settings
     AudioStreamBuilder builder;
     oboe::Result result = builder.setSharingMode(oboe::SharingMode::Shared)
             ->setDirection(oboe::Direction::Input)
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
             ->setFormat(oboe::AudioFormat::Float)
-            ->setChannelCount(kChannelCount)
-            //builder.setChannelCount(oboe::ChannelCount::Mono);
+            ->setChannelCount(oboe::ChannelCount::Mono)
             ->setDataCallback(mDataCallback)
             ->setErrorCallback(mErrorCallback)
-                    // Open using a shared_ptr.
             ->openStream(mStream);
     return result;
 }
@@ -49,8 +49,7 @@ DataCallbackResult NativeAudioService::MyDataCallback::onAudioReady(
 
     float *output = (float *) audioData;
 
-    int numSamples = numFrames * kChannelCount;
-    for (int i = 0; i < numSamples; i++) {
+    for (int i = 0; i < numFrames; i++) {
         *output++ = (float) ((drand48() - 0.5) * 0.6);
     }
     return oboe::DataCallbackResult::Continue;

@@ -5,6 +5,6 @@
 local.properties
 /app/release/
 /app/build/
+/app/.cxx/
 /build
 .externalNativeBuild
-.cxx

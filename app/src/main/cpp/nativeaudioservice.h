@@ -46,7 +46,6 @@ private:
     std::shared_ptr<MyDataCallback> mDataCallback;
     std::shared_ptr<MyErrorCallback> mErrorCallback;
 
-    static constexpr int kChannelCount = 2;
 };
 
 
