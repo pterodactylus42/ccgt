@@ -1,5 +1,4 @@
 // https://github.com/google/oboe/blob/main/docs/FullGuide.md
-// TODO - translate aubio to C++
 // TODO - move data out of callback with atomic fifo
 
 #include <oboe/Oboe.h>
