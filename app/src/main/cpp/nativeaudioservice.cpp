@@ -10,6 +10,7 @@ using namespace oboe;
 
 static const char *TAG = "NativeAudioService";
 
+// @see oboe apps fxlab DuplexEngine::openInStream
 oboe::Result NativeAudioService::open() {
     mDataCallback = std::make_shared<MyDataCallback>();
     mErrorCallback = std::make_shared<MyErrorCallback>(this);
@@ -24,6 +25,7 @@ oboe::Result NativeAudioService::open() {
             ->setDataCallback(mDataCallback)
             ->setErrorCallback(mErrorCallback)
             ->openStream(mStream);
+
     return result;
 }
 
@@ -38,20 +40,6 @@ oboe::Result NativeAudioService::stop() {
 
 oboe::Result NativeAudioService::close() {
     return mStream->close();
-}
-
-DataCallbackResult NativeAudioService::MyDataCallback::onAudioReady(
-        AudioStream *audioStream,
-        void *audioData,
-        int32_t numFrames) {
-
-    float *output = (float *) audioData;
-
-    int numSamples = numFrames * kChannelCount;
-    for (int i = 0; i < numSamples; i++) {
-        *output++ = (float) ((drand48() - 0.5) * 0.6);
-    }
-    return oboe::DataCallbackResult::Continue;
 }
 
 void NativeAudioService::MyErrorCallback::onErrorAfterClose(oboe::AudioStream *oboeStream,
