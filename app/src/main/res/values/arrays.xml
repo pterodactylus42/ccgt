@@ -20,6 +20,7 @@
         <item>441</item>
         <item>442</item>
         <item>443</item>
+        <item>445</item>
     </string-array>
     <string-array name="calibration_values">
         <item value="0">432</item>
@@ -30,6 +31,7 @@
         <item value="5">441</item>
         <item value="6">442</item>
         <item value="7">443</item>
+        <item value="8">445</item>
     </string-array>
 
     <string-array name="samplerate_entries">
